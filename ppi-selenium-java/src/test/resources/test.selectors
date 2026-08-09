@@ -1,0 +1,2 @@
+by-property-element=//by-property-selector
+by-property-with-param=//by-property-selector[{param}]

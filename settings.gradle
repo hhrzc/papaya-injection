@@ -1,0 +1,9 @@
+rootProject.name = 'papaya-injection'
+
+include 'ppi-core'
+include 'ppi-core-spring'
+include 'ppi-playwright-java'
+include 'ppi-playwright-spring'
+include 'ppi-selenium-java'
+include 'ppi-selenium-spring'
+include 'common-invocation-handler'

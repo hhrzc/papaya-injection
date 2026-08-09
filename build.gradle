@@ -1,0 +1,42 @@
+plugins {
+    id 'java-library'
+}
+
+group = 'io.github.hhrzc'
+version = '0.1.0'   // dropped -SNAPSHOT for a real tagged release; bump as you like
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+ext {
+    junitBomVersion = '5.10.0'
+    springBootVersion = '3.3.2'
+    playwrightVersion = '1.55.0'
+    mokitoVersion = '5.12.0'
+    seleniumVersion = '4.41.0'
+    springVersion = '6.1.18'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(':ppi-core')
+    implementation project(':ppi-playwright-java')
+    implementation project(':ppi-playwright-spring')
+    compileOnly "com.microsoft.playwright:playwright:${playwrightVersion}"
+    testImplementation platform("org.junit:junit-bom:${junitBomVersion}")
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation "org.mockito:mockito-core:${mokitoVersion}"
+    testImplementation "com.microsoft.playwright:playwright:${playwrightVersion}"
+    testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
+}

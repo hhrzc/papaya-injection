@@ -1,0 +1,100 @@
+package com.hhrzc.papaya.ppi.core;
+
+import com.hhrzc.papaya.invocation.AbstractInvocationHandler;
+import com.hhrzc.papaya.ppi.annotations.Param;
+import com.hhrzc.papaya.ppi.exceptions.ParamAnnotationMissingException;
+import com.hhrzc.papaya.ppi.exceptions.SelectorMismatchKeyException;
+import com.hhrzc.papaya.ppi.model.BY;
+import com.hhrzc.papaya.ppi.model.PostfixWebElement;
+import com.hhrzc.papaya.ppi.model.WebElementSupplier;
+import org.openqa.selenium.WebElement;
+
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.Properties;
+
+public class TestAbstractSeleniumHandler extends AbstractInvocationHandler<WebElement, WebElementSupplier, PostfixWebElement> {
+
+    private static final BY DEFAULT_BY = BY.XPATH;
+    private BY processedBy;
+
+    public TestAbstractSeleniumHandler(Properties selectors) {
+        super(selectors);
+    }
+
+     @Override
+    protected String injectParameters(Method method, Object[] args, String selector) {
+        String processedSelector = selector;
+         processedBy = DEFAULT_BY;
+         if (args != null && args.length > 0) {
+             int start = 0;
+             if (method.getParameters()[0].getType() == BY.class) {
+                 processedBy = (BY) args[0];
+                 start = 1;
+             }
+             try {
+                 if (args.length > start) {
+                     processedSelector = addParams(selector, method.getParameters(), args, start);
+                 }
+             } catch (ParamAnnotationMissingException e) {
+                 throw new ParamAnnotationMissingException(
+                         "The @Param annotation missing for the method " + method.getName() +
+                                 ". Order number of the parameter: " + e.getParamsOrder());
+             }
+         }
+
+         return processedSelector;
+    }
+
+    @Override
+    protected WebElementSupplier createSupplier(Method method, String finalSelector, PostfixWebElement postfix, Object... args) {
+        return (driver) -> {
+            if (driver == null) {
+                throw new IllegalArgumentException("PPU Engine Fault: WebDriver cannot be null when calling " + method.getName());
+            }
+            WebElement element = driver.findElement(processedBy.by().apply(finalSelector));
+            return postfix == null ? element : postfix.apply(element);
+        };
+    }
+
+    private BY extractByFromArgs(Object[] args) {
+        if (args == null) {
+            return DEFAULT_BY;
+        }
+
+        for (Object arg : args) {
+            if (arg instanceof BY) {
+                return (BY) arg;
+            }
+        }
+        return DEFAULT_BY;
+    }
+
+    @Override
+    protected Class<PostfixWebElement> getPostfixLocatorClass() {
+        return PostfixWebElement.class;
+    }
+
+    private String addParams(String selector, Parameter[] parameters, Object[] args, int start) {
+        String processedSelector = selector;
+        for (int i = start; i < args.length; i++) {
+            Param paramAnnotation = parameters[i].getAnnotation(Param.class);
+            if (paramAnnotation == null) {
+                throw new ParamAnnotationMissingException(i);
+            }
+            String key = "{" + paramAnnotation.value() + "}";
+            if (!selector.contains(key)) {
+                throw new SelectorMismatchKeyException(key, selector);
+            }
+            processedSelector = processedSelector.replace(key, String.valueOf(args[i]));
+        }
+
+        if ((processedSelector.contains("{") && processedSelector.contains("}")) &&
+                processedSelector.indexOf("{") < processedSelector.indexOf("}")
+        ) {
+            throw new SelectorMismatchKeyException("Unresolved placeholders found", processedSelector);
+        }
+
+        return processedSelector;
+    }
+}
