@@ -214,7 +214,7 @@ Maven:
 
 The project structure:
 
-```
+```bash
 root-project/
 └── src/
     └── main/
@@ -228,7 +228,7 @@ root-project/
 
 `HomePage` interface:
 
-```
+```java
 @Telemetry("pages/home-page.telemetry")
 public interface HomePage {
     @Sensor("products")
@@ -238,13 +238,13 @@ public interface HomePage {
 
 home-page.telemetry:
 
-```
+```property
 products=//div[@class='shop-menu pull-right']//li/a[@href='/products']
 ```
 
 Test example:
 
-```
+```java
 public class HomePageTest {
 
     private HomePage homePage;
