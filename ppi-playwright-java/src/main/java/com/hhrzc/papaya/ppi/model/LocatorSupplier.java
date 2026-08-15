@@ -7,7 +7,7 @@ import java.util.function.Function;
 
 /**
  * @author hhrzc
- * @date 2024/6/17 17:45
+ * @since 2025/6/17 17:45
  */
 @FunctionalInterface
 public interface LocatorSupplier extends Function<Page, Locator> {

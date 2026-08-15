@@ -4,7 +4,7 @@ package com.hhrzc.papaya.ppi.core;
  * <b>PPI (Papaya Power Injection) Engine Contract</b>
  * <p>
  * This is a <b>Marker Interface</b>. It does not contain any methods.
- * Extending this interface tells the {@link  PapayaRegistrar} (The Scout)
+ * Extending this interface tells the {@link  com.hhrzc.papaya.ppi.registrar.PapayaRegistrar} (The Scout)
  * that your interface is a valid <b>Papaya Unit</b> ready for ignition.
  * Might be extended in the future to include common methods for all Papaya Units,
  * but for now, it serves as a marker to identify valid Papaya Units for injection.

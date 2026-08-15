@@ -10,8 +10,8 @@ import java.lang.annotation.Target;
 
 /**
  * @author hhrzc
- * @date 2024/6/17 17:44
- * @description This annotation is used to mark a package on configuration class.
+ * @since 2025/6/17 17:44
+ * This annotation is used to mark a package on configuration class.
  * Included to increase a speed of scanning telemetry interfaces by the Papaya framework
  * and to avoid scanning the whole classpath.
  * The value of the annotation is the path to the package where the telemetry interfaces are
@@ -19,12 +19,12 @@ import java.lang.annotation.Target;
  * and register them as beans in the Spring context.
  * For example, if the telemetry interfaces are located in the package "com.example.telemetry",
  * then the configuration class can be defined as:
- * <pre>
+ * <pre>{@code
  *     @Configuration
  *     @ConfigTelemetry("com.example.telemetry")
  *     public class AppConfig {
  *     }
- * </pre>
+ * }</pre>
  *
  * In this case, the Papaya framework will scan the "com.example.telemetry" package to find the
  * telemetry interfaces and register them as beans in the Spring context, allowing them to be

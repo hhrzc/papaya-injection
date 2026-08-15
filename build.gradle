@@ -1,9 +1,11 @@
 plugins {
     id 'java-library'
+    id 'signing'
+    id 'com.vanniktech.maven.publish' version '0.37.0'
 }
 
 group = 'io.github.hhrzc'
-version = '0.1.0'   // dropped -SNAPSHOT for a real tagged release; bump as you like
+version = '0.1.1'
 
 java {
     toolchain {
@@ -39,4 +41,38 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+mavenPublishing {
+    publishToMavenCentral()
+    signAllPublications()
+
+    pom {
+        name = 'Papaya Injection'
+        description = 'A Java library for QA test automation with Playwright integration.'
+        inceptionYear = '2026'
+        url = 'https://github.com/hhrzc/papaya-injection'
+
+        licenses {
+            license {
+                name = 'MIT License'
+                url = 'https://opensource.org/licenses/MIT'
+                distribution = 'https://opensource.org/licenses/MIT'
+            }
+        }
+
+        developers {
+            developer {
+                id = 'hhrzc'
+                name = 'Valentyn'
+                url = 'https://github.com/hhrzc'
+            }
+        }
+
+        scm {
+            url = 'https://github.com/hhrzc/papaya-injection'
+            connection = 'scm:git:git://github.com/hhrzc/papaya-injection.git'
+            developerConnection = 'scm:git:ssh://git@github.com/hhrzc/papaya-injection.git'
+        }
+    }
 }

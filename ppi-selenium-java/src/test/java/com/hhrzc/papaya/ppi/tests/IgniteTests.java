@@ -84,4 +84,34 @@ public class IgniteTests {
 
         Assertions.assertEquals(expected, capturedSelector);
     }
+
+    @Test
+    public void determineCssTest(){
+        TestPage ignite = WebElementIgniter.ignite(TestPage.class);
+        WebElementSupplier webElementSupplier = ignite.byCssDetermined();
+
+        webElementSupplier.apply(mockDriver);
+
+        verify(mockDriver).findElement(byArgumentCaptor.capture());
+        By capturedSelector = byArgumentCaptor.getValue();
+
+        By expected = By.cssSelector("div.css-determined");
+
+        Assertions.assertEquals(expected, capturedSelector);
+    }
+
+    @Test
+    public void determineXpathTest(){
+        TestPage ignite = WebElementIgniter.ignite(TestPage.class);
+        WebElementSupplier webElementSupplier = ignite.byXpathDetermined();
+
+        webElementSupplier.apply(mockDriver);
+
+        verify(mockDriver).findElement(byArgumentCaptor.capture());
+        By capturedSelector = byArgumentCaptor.getValue();
+
+        By expected = By.xpath("//xpath-determined");
+
+        Assertions.assertEquals(expected, capturedSelector);
+    }
 }

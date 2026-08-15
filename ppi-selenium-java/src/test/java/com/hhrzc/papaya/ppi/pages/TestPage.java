@@ -16,4 +16,8 @@ public interface TestPage {
     WebElementSupplier byValueElement();
     @Sensor("$by-by-element")
     WebElementSupplier byByElement(BY by);
+    @Sensor("$//xpath-determined")
+    WebElementSupplier byXpathDetermined();
+    @Sensor("$div.css-determined")
+    WebElementSupplier byCssDetermined();
 }

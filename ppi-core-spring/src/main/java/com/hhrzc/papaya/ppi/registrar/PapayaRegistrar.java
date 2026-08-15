@@ -19,7 +19,7 @@ import java.util.*;
 
 /**
  * @author hhrzc
- * @date 2024/6/17 17:45
+ * @since 2025/6/17 17:45
  * Registrar for Papaya framework.
  * Scans the specified packages for interfaces that extend PpiRepository and registers
  * them as beans in the Spring context using PapayaFactoryBean to create proxy instances

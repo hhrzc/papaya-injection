@@ -17,8 +17,7 @@ import java.util.stream.Collectors;
 
 /**
  * @author hhrzc
- * @date 2024/6/11 17:28
- * @description This class is responsible for handling the method invocations on the proxy instances created by the Papaya framework.
+ * This class is responsible for handling the method invocations on the proxy instances created by the Papaya framework.
  * It processes the {@link Sensor} annotations on the methods and retrieves the corresponding selectors from the .telemetry file.
  * It also handles the parameter injection for dynamic selectors using the {@link Param} annotation.
  * L - the object that represents the locator (Playwright's Locator, Selenium's WebElement, etc.)

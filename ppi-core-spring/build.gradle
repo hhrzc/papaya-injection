@@ -1,9 +1,10 @@
 plugins {
     id 'java-library'
-    id 'maven-publish'
+    id 'signing'
+    id 'com.vanniktech.maven.publish' version '0.37.0'
 }
 
-group = 'com.hhrzc.papaya'
+group = 'io.github.hhrzc'
 version = rootProject.version
 
 java {
@@ -12,31 +13,9 @@ java {
     }
 }
 
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-            artifactId = "ppi-core-spring"
-        }
-    }
-    repositories {
-        maven {
-            url "https://gitlab.com/api/v4/projects/80221747/packages/maven"
-            credentials(HttpHeaderCredentials) {
-                name = "Deploy-Token"
-                value = System.getenv("PAPAYA_TOKEN")
-            }
-            authentication {
-                header(HttpHeaderAuthentication)
-            }
-        }
-    }
-}
-
 repositories {
     mavenCentral()
 }
-
 
 dependencies {
     api project(':ppi-core')
@@ -48,4 +27,38 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+mavenPublishing {
+    publishToMavenCentral()
+    signAllPublications()
+
+    pom {
+        name = 'PPI Core Spring'
+        description = 'Spring integration support for the PPI Core module of the Papaya Injection test automation library.'
+        inceptionYear = '2026'
+        url = 'https://github.com/hhrzc/papaya-injection'
+
+        licenses {
+            license {
+                name = 'MIT License'
+                url = 'https://opensource.org/licenses/MIT'
+                distribution = 'https://opensource.org/licenses/MIT'
+            }
+        }
+
+        developers {
+            developer {
+                id = 'hhrzc'
+                name = 'Valentyn'
+                url = 'https://github.com/hhrzc'
+            }
+        }
+
+        scm {
+            url = 'https://github.com/hhrzc/papaya-injection'
+            connection = 'scm:git:git://github.com/hhrzc/papaya-injection.git'
+            developerConnection = 'scm:git:ssh://git@github.com/hhrzc/papaya-injection.git'
+        }
+    }
 }

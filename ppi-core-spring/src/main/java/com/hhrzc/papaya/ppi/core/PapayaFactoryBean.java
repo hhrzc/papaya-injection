@@ -15,8 +15,8 @@ import java.util.Properties;
 
 /**
  * @author hhrzc
- * @date 2024/6/11 17:28
- * @description This FactoryBean is responsible for creating proxy instances of interfaces
+ * @since 2025/6/11 17:28
+ * This FactoryBean is responsible for creating proxy instances of interfaces
  * annotated with @Telemetry.
  * It reads the selectors from the specified .telemetry file and uses them to create a
  * dynamic proxy that implements the interface.

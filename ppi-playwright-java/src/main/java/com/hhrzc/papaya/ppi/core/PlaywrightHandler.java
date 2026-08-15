@@ -13,9 +13,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Properties;
 
-public class TestAbstractPlaywrightHandler extends AbstractInvocationHandler<Locator, LocatorSupplier, PostfixLocator> {
+public class PlaywrightHandler extends AbstractInvocationHandler<Locator, LocatorSupplier, PostfixLocator> {
 
-    public TestAbstractPlaywrightHandler(Properties selectors) {
+    public PlaywrightHandler(Properties selectors) {
         super(selectors);
     }
 

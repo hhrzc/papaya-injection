@@ -7,18 +7,19 @@ import com.hhrzc.papaya.ppi.exceptions.SelectorMismatchKeyException;
 import com.hhrzc.papaya.ppi.model.BY;
 import com.hhrzc.papaya.ppi.model.PostfixWebElement;
 import com.hhrzc.papaya.ppi.model.WebElementSupplier;
+import com.hhrzc.papaya.ppi.utils.Utils;
 import org.openqa.selenium.WebElement;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Properties;
 
-public class TestAbstractSeleniumHandler extends AbstractInvocationHandler<WebElement, WebElementSupplier, PostfixWebElement> {
+public class SeleniumHandler extends AbstractInvocationHandler<WebElement, WebElementSupplier, PostfixWebElement> {
 
     private static final BY DEFAULT_BY = BY.XPATH;
     private BY processedBy;
 
-    public TestAbstractSeleniumHandler(Properties selectors) {
+    public SeleniumHandler(Properties selectors) {
         super(selectors);
     }
 
@@ -31,6 +32,8 @@ public class TestAbstractSeleniumHandler extends AbstractInvocationHandler<WebEl
              if (method.getParameters()[0].getType() == BY.class) {
                  processedBy = (BY) args[0];
                  start = 1;
+             } else {
+                 processedBy = Utils.isXPath(selector) ? BY.XPATH : BY.CSS;
              }
              try {
                  if (args.length > start) {
@@ -41,6 +44,8 @@ public class TestAbstractSeleniumHandler extends AbstractInvocationHandler<WebEl
                          "The @Param annotation missing for the method " + method.getName() +
                                  ". Order number of the parameter: " + e.getParamsOrder());
              }
+         } else {
+                processedBy = Utils.isXPath(selector) ? BY.XPATH : BY.CSS;
          }
 
          return processedSelector;
@@ -55,19 +60,6 @@ public class TestAbstractSeleniumHandler extends AbstractInvocationHandler<WebEl
             WebElement element = driver.findElement(processedBy.by().apply(finalSelector));
             return postfix == null ? element : postfix.apply(element);
         };
-    }
-
-    private BY extractByFromArgs(Object[] args) {
-        if (args == null) {
-            return DEFAULT_BY;
-        }
-
-        for (Object arg : args) {
-            if (arg instanceof BY) {
-                return (BY) arg;
-            }
-        }
-        return DEFAULT_BY;
     }
 
     @Override
