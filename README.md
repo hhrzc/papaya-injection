@@ -272,6 +272,51 @@ public class HomePageTest {
 }
 ```
 
+## Supplier metadata: element name and selector
+
+Every `LocatorSupplier` and `WebElementSupplier` knows where it came from. You can read
+the declared method name and a readable description of its selector, without a browser
+and without resolving the element.
+
+Playwright:
+
+```java
+LocatorSupplier supplier = loginPage.buttonByNameWithPostfix("baz", locator -> locator.locator("//xpath"));
+
+supplier.getVariableName();   // "buttonByNameWithPostfix"
+supplier.getSelectorValue();  // "button[class*='baz'] -> locator("//xpath")"
+```
+
+Selenium:
+
+```java
+WebElementSupplier supplier = loginPage.withPostfix(e -> e.findElement(By.xpath("//div[@class='second']")));
+
+supplier.getVariableName();   // "withPostfix"
+supplier.getSelectorValue();  // "By.xpath: //div[@class='first'], By.xpath: //div[@class='second']"
+```
+
+Name overriding:
+```java
+@Sensor(value = "$button[class*=[{btnName}]", name = "Sign In button")
+LocatorSupplier buttonByNameWithPostfix(@Param("btnName") String classAttr, PostfixLocator postfix);
+```
+
+```java
+buttonByNameWithPostfix.getVariableName();   // "Sign In button"
+```
+
+This is useful for logs, report step names, and clearer failure messages.
+
+The selector value is a **description** for humans, not a selector you can pass to
+`findElement` or `page.locator()` — it may combine CSS and XPath parts.
+
+Postfix lambdas are described automatically: the library records the calls the lambda
+makes, so `locator -> locator.nth(1)` becomes `nth(1)` in Playwright, and
+`e -> e.findElement(By.xpath(...))` becomes `By.xpath: ...` in Selenium.
+This works for simple call chains. If the postfix contains logic that depends on results
+(for example `count()` or `isDisplayed()`), it is described as `custom`.
+
 ## License
 
 MIT — see [LICENSE](./LICENSE).
