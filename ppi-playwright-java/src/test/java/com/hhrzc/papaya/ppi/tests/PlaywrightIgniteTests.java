@@ -10,8 +10,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class PlaywrightIgniteTests {
     private Page mockPage;
@@ -44,15 +43,22 @@ public class PlaywrightIgniteTests {
     }
 
     @Test
-    public void igniteWithPostfixTest(){
+    public void igniteWithPostfixTest() {
+        Locator baseLocator = mock(Locator.class);
+        Locator expected = mock(Locator.class);
+
+        when(mockPage.locator("//div.first")).thenReturn(baseLocator);
+        when(baseLocator.locator("//div.second")).thenReturn(expected);
+
         TestPage ignite = LocatorIgniter.ignite(TestPage.class);
         PostfixLocator postfixLocator = l -> l.locator("//div.second");
         LocatorSupplier locatorSupplier = ignite.withPostfix(postfixLocator);
 
         Locator actual = locatorSupplier.apply(mockPage);
-        Locator expected = verify(mockPage).locator("//div.first").locator("//div.second");
 
-        Assertions.assertEquals(expected, actual);
+        Assertions.assertSame(expected, actual);
+        verify(mockPage).locator("//div.first");
+        verify(baseLocator).locator("//div.second");
     }
 
     @Test
