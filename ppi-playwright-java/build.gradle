@@ -19,9 +19,11 @@ repositories {
 
 dependencies {
     api project(':ppi-core')
-    compileOnly "com.microsoft.playwright:playwright:${playwrightVersion}"
     api project(":common-invocation-handler")
+    compileOnly "com.microsoft.playwright:playwright:${playwrightVersion}"
+    testImplementation "com.microsoft.playwright:playwright:${playwrightVersion}"
     testImplementation platform("org.junit:junit-bom:${junitBomVersion}")
+    testImplementation "org.mockito:mockito-core:${mokitoVersion}"
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }

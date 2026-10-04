@@ -102,21 +102,56 @@ public class TestPageSensor {
     }
 
     @Test
-    public void testPostfixParameter(){
+    public void testPostfixParameter() {
+        Locator baseLocator = mock(Locator.class);
+        Locator expectedWithPostfix = mock(Locator.class);
+
+        when(mockPage.locator("button[class*=[baz]")).thenReturn(baseLocator);
+        when(baseLocator.locator("//xpath")).thenReturn(expectedWithPostfix);
+
+        PostfixLocator postfix = locator -> locator.locator("//xpath");
+        LocatorSupplier supplier = testPage.postfixParameterTest("baz", postfix);
+
+        Locator actual = supplier.apply(mockPage);
+
+        Assertions.assertThat(supplier.getSelectorValue()).isEqualTo("button[class*=[baz] -> locator(\"//xpath\")");
+        Assertions.assertThat(actual).isEqualTo(expectedWithPostfix);
+        verify(mockPage).locator("button[class*=[baz]");
+        verify(baseLocator).locator("//xpath");
+    }
+
+    @Test
+    public void testPostfixParameter2(){
+        // 1. Setup the mocks
         Locator mokLocator = mock(Locator.class);
+
+        // 2. STUB BOTH: Make sure both page and locator return a mock when .locator() is called
         when(mockPage.locator(anyString())).thenReturn(mokLocator);
+        when(mokLocator.locator(anyString())).thenReturn(mokLocator); // <-- ADD THIS
         when(mokLocator.nth(anyInt())).thenReturn(mokLocator);
 
-        PostfixLocator postfix = locator -> locator.nth(1);
+        // 3. Define the test inputs
+        PostfixLocator postfix = locator -> locator.locator("//xpath");
+
+        // 4. Execute the production code
         LocatorSupplier actual = testPage.postfixParameterTest("baz", postfix);
+
+        // Ensure the factory method actually returned a supplier object
+        Assertions.assertThat(actual).as("LocatorSupplier should not be null").isNotNull();
+
+        // 5. Trigger the supplier evaluation
         Locator apply = actual.apply(mockPage);
 
+        // 6. Verify and Assert
         verify(mockPage).locator(stringArgumentCaptor.capture());
         String capturedSelector = stringArgumentCaptor.getValue();
+
+        System.out.println(actual.getSelectorValue());
 
         Assertions.assertThat(capturedSelector)
                 .isEqualTo("button[class*=[baz]");
     }
+
 
     @Test
     public void methodWithoutFile(){

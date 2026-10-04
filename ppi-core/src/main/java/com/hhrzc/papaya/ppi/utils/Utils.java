@@ -1,5 +1,9 @@
 package com.hhrzc.papaya.ppi.utils;
 
+import com.hhrzc.papaya.ppi.annotations.Sensor;
+
+import java.lang.reflect.Method;
+
 public class Utils {
     public static boolean isXPath(String locator) {
         if (locator == null || locator.trim().isEmpty()) {
@@ -28,5 +32,14 @@ public class Utils {
         }
 
         return false;
+    }
+
+    public static String getName(Method method){
+        Sensor sensor = method.getAnnotation(Sensor.class);
+        if (sensor != null && !sensor.name().isEmpty()) {
+            return sensor.name();
+        } else {
+            return method.getName();
+        }
     }
 }

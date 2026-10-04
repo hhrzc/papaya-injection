@@ -10,5 +10,5 @@ import java.util.function.Function;
  * @since 2025/6/17 17:45
  */
 @FunctionalInterface
-public interface LocatorSupplier extends Function<Page, Locator> {
+public interface LocatorSupplier extends Function<Page, Locator>, DataSupplier {
 }

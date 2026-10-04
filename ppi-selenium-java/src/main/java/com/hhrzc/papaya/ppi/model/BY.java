@@ -4,22 +4,28 @@ import org.openqa.selenium.By;
 import java.util.function.Function;
 
 public enum BY {
-    XPATH(By::xpath),
-    CSS(By::cssSelector),
-    ID(By::id),
-    NAME(By::name),
-    CLASS_NAME(By::className),
-    TAG_NAME(By::tagName),
-    LINK_TEXT(By::linkText),
-    PARTIAL_LINK_TEXT(By::partialLinkText);
+    XPATH(By::xpath, "By.xpath"),
+    CSS(By::cssSelector, "By.cssSelector"),
+    ID(By::id, "By.id"),
+    NAME(By::name, "By.name"),
+    CLASS_NAME(By::className, "By.className"),
+    TAG_NAME(By::tagName, "By.tagName"),
+    LINK_TEXT(By::linkText, "By.linkText"),
+    PARTIAL_LINK_TEXT(By::partialLinkText, "By.partialLinkText");
 
     private final Function<String, By> byFunction;
+    private String prefixValue;
 
-    BY(Function<String, By> byFunction){
+    BY(Function<String, By> byFunction, String prefixValue){
         this.byFunction = byFunction;
+        this.prefixValue = prefixValue;
     }
 
     public Function<String, By> by(){
         return byFunction;
+    }
+
+    public String prefixValue(){
+        return prefixValue;
     }
 }
