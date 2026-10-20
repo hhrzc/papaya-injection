@@ -76,3 +76,11 @@ mavenPublishing {
         }
     }
 }
+
+tasks.withType(Test).configureEach {
+    testLogging {
+        events 'failed'
+        exceptionFormat 'full'
+        showStandardStreams = true
+    }
+}

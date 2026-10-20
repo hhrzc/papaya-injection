@@ -30,9 +30,6 @@ public class PropertyLoader {
     }
 
     public static Properties load(String path, String stage) {
-        if (stage == null) {
-            return load(path);
-        }
         Properties raw = load(path);
         Properties result = new Properties();
 
@@ -40,6 +37,10 @@ public class PropertyLoader {
             if (!key.startsWith("%")) {
                 result.setProperty(key, raw.getProperty(key));
             }
+        }
+
+        if (stage == null) {
+            return result;
         }
 
         String prefix = "%" + stage + ".";

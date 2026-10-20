@@ -1,0 +1,5 @@
+byMethodName=by-method-name-selector
+by-sensor-property=by-sensor-property-selector
+%dev.byMethodName=by-method-name-selector.dev
+%dev.by-sensor-property=by-sensor-property-selector.dev
+%prod.by-sensor-property=by-sensor-property-selector.prod

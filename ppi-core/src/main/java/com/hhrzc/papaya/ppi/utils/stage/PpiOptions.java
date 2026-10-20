@@ -75,10 +75,8 @@ public final class PpiOptions {
         frozen = true;
     }
 
-    /** For the library's own tests only. */
-    static synchronized void resetForTests() {
+    public static void dropStageFrom() {
         stageFrom = null;
-        frozen = false;
     }
 
     /**

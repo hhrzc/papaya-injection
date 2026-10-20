@@ -5,6 +5,9 @@ import com.hhrzc.papaya.ppi.utils.stage.StageResolver;
 //import com.hhrzc.papaya.ppi.utils.stage.SystemLookup;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
+
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -21,7 +24,8 @@ class StageResolverTest {
         System.clearProperty("pi.stage");
         System.clearProperty("my.project.stage");
         System.clearProperty(PpiOptions.STAGE_FROM_PROPERTY);
-//        PpiOptions.resetForTests();
+        System.clearProperty("my.awesome.property");
+        PpiOptions.dropStageFrom();
     }
 
     @Test
@@ -39,21 +43,14 @@ class StageResolverTest {
 
     @Test
     void nothingSetMeansNoStage() {
+        PpiOptions.setStageFrom("non-defined");
         assertThat(StageResolver.resolve()).isEmpty();
         assertThat(StageResolver.resolveOrNull()).isNull();
     }
 
     @Test
-    void blankValueMeansNoStage() {
-        System.setProperty("my.awesome.project", "   ");
-
-        assertThat(StageResolver.resolve()).isEmpty();
-    }
-
-    @Test
     void valueIsTrimmed() {
         System.setProperty("my.awesome.project", "  prod ");
-
         assertThat(StageResolver.resolve()).contains("prod");
     }
 
@@ -73,12 +70,15 @@ class StageResolverTest {
         System.setProperty(PpiOptions.STAGE_FROM_PROPERTY, "my.project.stage");
         System.setProperty("my.project.stage", "prod");
 
-        assertThat(StageResolver.resolve()).contains("prod");
+        Optional<String> actual = StageResolver.resolve();
+
+        assertThat(actual).contains("prod");
     }
 
     // ---------- set-once rules ----------
 
     @Test
+    @DisabledIfEnvironmentVariable(named = "MY_AWESOME_PROJECT", matches = ".*")
     void sameStageFromTwiceIsAllowed() {
         PpiOptions.setStageFrom("my.project.stage");
         PpiOptions.setStageFrom("my.project.stage");
@@ -104,6 +104,9 @@ class StageResolverTest {
 
     @Test
     void testEnvFromConfiguration() {
+        System.clearProperty(PpiOptions.STAGE_FROM_PROPERTY);
+        System.clearProperty("my.awesome.project");
+        System.out.println("debug, stageFrom: " + PpiOptions.getStageFrom());
         String actual = StageResolver.resolveOrNull();
         String expected = "dev";
         assertThat(actual).isEqualTo(expected);

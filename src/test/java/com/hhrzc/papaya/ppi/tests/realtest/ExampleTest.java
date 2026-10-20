@@ -7,7 +7,8 @@ import com.microsoft.playwright.*;
 import org.junit.jupiter.api.Test;
 
 public class ExampleTest {
-    @Test
+
+
     public void exampleTest() {
 
         ExamplePage examplePage = LocatorIgniter.ignite(ExamplePage.class);

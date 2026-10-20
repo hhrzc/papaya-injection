@@ -2,7 +2,8 @@ package com.hhrzc.papaya.ppi.tests.java;
 
 import com.hhrzc.papaya.ppi.core.LocatorIgniter;
 import com.hhrzc.papaya.ppi.tests.pages.OverrideOkBtnPage;
-import com.hhrzc.papaya.ppi.tests.pages.TestPage;
+import com.hhrzc.papaya.ppi.tests.pages.TestStagesPage;
+import com.hhrzc.papaya.ppi.tests.pages.TestStagesPage;
 import com.microsoft.playwright.Page;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -38,7 +39,7 @@ class StageSelectorsTest {
     // ---------- dev: from the environment variable ----------
     @Test
     void dev_methodNameKey_usesDevSelector() {
-        TestPage page = LocatorIgniter.ignite(TestPage.class);
+        TestStagesPage page = LocatorIgniter.ignite(TestStagesPage.class);
 
         assertThat(page.byMethodName().getSelectorValue())
                 .isEqualTo("by-method-name-selector.dev");
@@ -46,7 +47,7 @@ class StageSelectorsTest {
 
     @Test
     void dev_sensorKey_usesDevSelector() {
-        TestPage page = LocatorIgniter.ignite(TestPage.class);
+        TestStagesPage page = LocatorIgniter.ignite(TestStagesPage.class);
 
         assertThat(page.bySensorProperty().getSelectorValue())
                 .isEqualTo("by-sensor-property-selector.dev");
@@ -62,7 +63,7 @@ class StageSelectorsTest {
 
     @Test
     void dev_literalSelector_isNotAffectedByStage() {
-        TestPage page = LocatorIgniter.ignite(TestPage.class);
+        TestStagesPage page = LocatorIgniter.ignite(TestStagesPage.class);
 
         assertThat(page.bySensorValue().getSelectorValue())
                 .isEqualTo("by-sensor-value");
@@ -71,7 +72,7 @@ class StageSelectorsTest {
     @Test
     void dev_selectorIsReallyPassedToPlaywright() {
         Page mockPage = mock(Page.class);
-        TestPage page = LocatorIgniter.ignite(TestPage.class);
+        TestStagesPage page = LocatorIgniter.ignite(TestStagesPage.class);
 
         page.byMethodName().apply(mockPage);
 
@@ -82,7 +83,7 @@ class StageSelectorsTest {
     @Test
     void prod_sensorKey_usesProdSelector() {
         System.setProperty("my.awesome.project", "prod");
-        TestPage page = LocatorIgniter.ignite(TestPage.class);
+        TestStagesPage page = LocatorIgniter.ignite(TestStagesPage.class);
 
         assertThat(page.bySensorProperty().getSelectorValue())
                 .isEqualTo("by-sensor-property-selector.prod");
@@ -91,7 +92,7 @@ class StageSelectorsTest {
     @Test
     void prod_keyWithoutProdVariant_fallsBackToDefault() {
         System.setProperty("my.awesome.project", "prod");
-        TestPage page = LocatorIgniter.ignite(TestPage.class);
+        TestStagesPage page = LocatorIgniter.ignite(TestStagesPage.class);
 
         // %dev.byMethodName exists, but there is no %prod.byMethodName
         assertThat(page.byMethodName().getSelectorValue())
@@ -102,7 +103,7 @@ class StageSelectorsTest {
     @Test
     void unknownStage_usesDefaults() {
         System.setProperty("my.awesome.project", "qa");
-        TestPage page = LocatorIgniter.ignite(TestPage.class);
+        TestStagesPage page = LocatorIgniter.ignite(TestStagesPage.class);
 
         assertThat(page.byMethodName().getSelectorValue()).isEqualTo("by-method-name-selector");
         assertThat(page.bySensorProperty().getSelectorValue()).isEqualTo("by-sensor-property-selector");
@@ -113,7 +114,7 @@ class StageSelectorsTest {
     void noStage_usesDefaults() {
         // point the library to a variable that is set nowhere
         System.setProperty("ppi.stage.from", "not.existing.stage");
-        TestPage page = LocatorIgniter.ignite(TestPage.class);
+        TestStagesPage page = LocatorIgniter.ignite(TestStagesPage.class);
 
         assertThat(page.byMethodName().getSelectorValue()).isEqualTo("by-method-name-selector");
         assertThat(page.bySensorProperty().getSelectorValue()).isEqualTo("by-sensor-property-selector");
@@ -122,7 +123,7 @@ class StageSelectorsTest {
     // ---------- ignite timing ----------
     @Test
     void stageIsFixedAtIgnite() {
-        TestPage page = LocatorIgniter.ignite(TestPage.class);   // ignited with dev
+        TestStagesPage page = LocatorIgniter.ignite(TestStagesPage.class);   // ignited with dev
 
         System.setProperty("my.awesome.project", "prod");          // changed too late
 

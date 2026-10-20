@@ -5,6 +5,7 @@ import com.hhrzc.papaya.ppi.model.PostfixLocator;
 import com.hhrzc.papaya.ppi.tests.pages.NoFileDefinedPage;
 import com.hhrzc.papaya.ppi.tests.pages.OverrideOkBtnPage;
 import com.hhrzc.papaya.ppi.tests.pages.TestPage;
+import com.hhrzc.papaya.ppi.utils.stage.PpiOptions;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import org.assertj.core.api.Assertions;
@@ -145,8 +146,6 @@ public class TestPageSensor {
         // 6. Verify and Assert
         verify(mockPage).locator(stringArgumentCaptor.capture());
         String capturedSelector = stringArgumentCaptor.getValue();
-
-        System.out.println(actual.getSelectorValue());
 
         Assertions.assertThat(capturedSelector)
                 .isEqualTo("button[class*=[baz]");
