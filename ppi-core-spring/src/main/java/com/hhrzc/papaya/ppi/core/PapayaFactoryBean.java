@@ -3,6 +3,7 @@ package com.hhrzc.papaya.ppi.core;
 import com.hhrzc.papaya.ppi.annotations.Telemetry;
 import com.hhrzc.papaya.ppi.exceptions.TelemetryFileImproprietyException;
 import com.hhrzc.papaya.ppi.exceptions.PpiRepositoryNotExtendetException;
+import com.hhrzc.papaya.ppi.utils.PpiIgniter;
 import com.hhrzc.papaya.ppi.utils.PropertyLoader;
 import org.springframework.beans.factory.FactoryBean;
 
@@ -59,15 +60,17 @@ public class PapayaFactoryBean<T> implements FactoryBean<T> {
         }
         selectors = PropertyLoader.load(unitPath);
 
-        InvocationHandler handler = invocationHandler
-                .getConstructor(Properties.class)
-                .newInstance(selectors);
+//        InvocationHandler handler = invocationHandler
+//                .getConstructor(Properties.class)
+//                .newInstance(selectors);
 
-        return (T) Proxy.newProxyInstance(
-                interfaceType.getClassLoader(),
-                new Class<?>[]{interfaceType},
-                handler
-        );
+        return PpiIgniter.ignite(interfaceType, invocationHandler);
+
+//        return (T) Proxy.newProxyInstance(
+//                interfaceType.getClassLoader(),
+//                new Class<?>[]{interfaceType},
+//                handler
+//        );
     }
 
     @Override

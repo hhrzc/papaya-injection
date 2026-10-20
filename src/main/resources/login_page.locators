@@ -1,2 +1,5 @@
 okBtn=button.SignIn
 registerBtn=button.SignUp
+%dev.okBtn=button.SignIn.dev
+%prod.okBtn=button.SignIn.prod
+%prod.registerBtn=button.SignUp.prod

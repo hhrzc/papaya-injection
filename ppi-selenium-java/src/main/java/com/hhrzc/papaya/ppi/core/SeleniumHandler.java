@@ -26,7 +26,7 @@ public class SeleniumHandler extends AbstractInvocationHandler<WebElement, WebEl
         super(selectors);
     }
 
-     @Override
+    @Override
     protected String injectParameters(Method method, Object[] args, String selector) {
         String processedSelector = selector;
          processedBy = DEFAULT_BY;
@@ -119,9 +119,5 @@ public class SeleniumHandler extends AbstractInvocationHandler<WebElement, WebEl
         }
 
         return processedSelector;
-    }
-
-    private String resolveSelector(String selector){
-        return Utils.isXPath(selector) ? "XPath: " + selector : "css: " + selector;
     }
 }

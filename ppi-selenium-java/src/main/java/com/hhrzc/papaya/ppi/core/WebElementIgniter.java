@@ -16,14 +16,7 @@ import java.util.Properties;
  */
 
 public class WebElementIgniter extends PpiIgniter {
-
-    @SuppressWarnings("unchecked")
     public static <T> T ignite(Class<T> interfaceType) {
-        Properties selectors = getProperties(interfaceType);
-        return (T) Proxy.newProxyInstance(
-                interfaceType.getClassLoader(),
-                new Class<?>[]{interfaceType},
-                new SeleniumHandler(selectors)
-        );
+        return ignite(interfaceType, SeleniumHandler.class);
     }
 }

@@ -33,6 +33,14 @@ public abstract class AbstractInvocationHandler<L, S extends Function<?, L>, P e
         this.selectors = selectors;
     }
 
+
+    protected abstract String injectParameters(Method method, Object[] args, String rawSelector);
+
+    protected abstract S createSupplier(Method method, String finalSelector, P postfix, Object... args);
+
+    protected abstract Class<P> getPostfixLocatorClass();
+
+
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
@@ -67,12 +75,6 @@ public abstract class AbstractInvocationHandler<L, S extends Function<?, L>, P e
 
         return createSupplier(method, finalSelector, postfix, (Object) null);
     }
-
-    protected abstract String injectParameters(Method method, Object[] args, String rawSelector);
-
-    protected abstract S createSupplier(Method method, String finalSelector, P postfix, Object... args);
-
-    protected abstract Class<P> getPostfixLocatorClass();
 
     private P extractSinglePostfix(Method method, Object[] args) {
 

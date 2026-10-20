@@ -16,14 +16,7 @@ import java.util.Properties;
  */
 
 public class LocatorIgniter extends PpiIgniter {
-
-    @SuppressWarnings("unchecked")
     public static <T> T ignite(Class<T> interfaceType) {
-        Properties selectors = getProperties(interfaceType);
-        return (T) Proxy.newProxyInstance(
-                interfaceType.getClassLoader(),
-                new Class<?>[]{interfaceType},
-                new PlaywrightHandler(selectors)
-        );
+        return ignite(interfaceType, PlaywrightHandler.class);
     }
 }
