@@ -16,7 +16,7 @@ public class PropertyLoader {
      * @param path The path provided in @PapayaUnit (e.g., "pages/login.telemetry")
      * @return A Properties object containing the selectors.
      */
-    public static Properties load(String path) {
+    private static Properties loadRaw(String path) {
         Properties props = new Properties();
         try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(path)) {
             if (is == null) {
@@ -30,7 +30,9 @@ public class PropertyLoader {
     }
 
     public static Properties load(String path, String stage) {
-        Properties raw = load(path);
+        if (path == null || path.isBlank()) return new Properties();
+        
+        Properties raw = loadRaw(path);
         Properties result = new Properties();
 
         for (String key : raw.stringPropertyNames()) {
@@ -39,7 +41,7 @@ public class PropertyLoader {
             }
         }
 
-        if (stage == null) {
+        if (stage == null || stage.isBlank()) {
             return result;
         }
 

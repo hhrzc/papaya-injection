@@ -1,7 +1,6 @@
 plugins {
     id 'java-library'
-    id 'signing'
-    id 'com.vanniktech.maven.publish' version '0.37.0'
+    id 'com.vanniktech.maven.publish' version '0.37.0' apply false   // available to modules, NOT applied to root
 }
 
 group = 'io.github.hhrzc'
@@ -17,7 +16,7 @@ ext {
     junitBomVersion = '5.10.0'
     springBootVersion = '3.3.2'
     playwrightVersion = '1.55.0'
-    mokitoVersion = '5.12.0'
+    mockitoVersion = '5.12.0'
     seleniumVersion = '4.41.0'
     springVersion = '6.1.18'
 }
@@ -33,7 +32,7 @@ dependencies {
     compileOnly "com.microsoft.playwright:playwright:${playwrightVersion}"
     testImplementation platform("org.junit:junit-bom:${junitBomVersion}")
     testImplementation 'org.junit.jupiter:junit-jupiter'
-    testImplementation "org.mockito:mockito-core:${mokitoVersion}"
+    testImplementation "org.mockito:mockito-core:${mockitoVersion}"
     testImplementation "com.microsoft.playwright:playwright:${playwrightVersion}"
     testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -43,36 +42,32 @@ test {
     useJUnitPlatform()
 }
 
-mavenPublishing {
-    publishToMavenCentral()
-    signAllPublications()
+subprojects {
+    apply plugin: 'java-library'
+    apply plugin: 'com.vanniktech.maven.publish'
 
-    pom {
-        name = 'Papaya Injection'
-        description = 'A Java library for QA test automation with Playwright integration.'
-        inceptionYear = '2026'
-        url = 'https://github.com/hhrzc/papaya-injection'
+    group = 'io.github.hhrzc'
+    version = rootProject.version
 
-        licenses {
-            license {
+    mavenPublishing {
+        publishToMavenCentral()
+        signAllPublications()
+        pom {
+            inceptionYear = '2026'
+            url = 'https://github.com/hhrzc/papaya-injection'
+            licenses { license {
                 name = 'MIT License'
                 url = 'https://opensource.org/licenses/MIT'
                 distribution = 'https://opensource.org/licenses/MIT'
+            } }
+            developers { developer {
+                id = 'hhrzc'; name = 'Valentyn'; url = 'https://github.com/hhrzc'
+            } }
+            scm {
+                url = 'https://github.com/hhrzc/papaya-injection'
+                connection = 'scm:git:git://github.com/hhrzc/papaya-injection.git'
+                developerConnection = 'scm:git:ssh://git@github.com/hhrzc/papaya-injection.git'
             }
-        }
-
-        developers {
-            developer {
-                id = 'hhrzc'
-                name = 'Valentyn'
-                url = 'https://github.com/hhrzc'
-            }
-        }
-
-        scm {
-            url = 'https://github.com/hhrzc/papaya-injection'
-            connection = 'scm:git:git://github.com/hhrzc/papaya-injection.git'
-            developerConnection = 'scm:git:ssh://git@github.com/hhrzc/papaya-injection.git'
         }
     }
 }

@@ -144,4 +144,14 @@ public class SeleniumIgniteTests {
         Assertions.assertEquals( mainSelector + ", " + postfixSelector, selectorValue);
         Assertions.assertEquals("withPostfix", variableName);
     }
+
+    @Test
+    public void postfixDescriptionInlineLambda() {
+        TestPage page = WebElementIgniter.ignite(TestPage.class);
+        By byPostfix = By.xpath("//div.second");
+        PostfixWebElement postfixWebElement = e -> e.findElement(byPostfix);
+        WebElementSupplier supplier = page.withPostfix(postfixWebElement);
+
+        Assertions.assertEquals("By.xpath: //div.first, By.xpath: //div.second", supplier.getSelectorValue());
+    }
 }

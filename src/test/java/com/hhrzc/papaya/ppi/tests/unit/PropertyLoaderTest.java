@@ -3,6 +3,7 @@ package com.hhrzc.papaya.ppi.tests.unit;
 import com.hhrzc.papaya.ppi.utils.PropertyLoader;
 import com.hhrzc.papaya.ppi.utils.stage.PpiOptions;
 import com.hhrzc.papaya.ppi.utils.stage.StageResolver;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
@@ -122,5 +123,10 @@ class PropertyLoaderTest {
         System.out.println("ppi.properties         = " + Thread.currentThread().getContextClassLoader().getResource("ppi.properties"));
         System.out.println("stageFrom              = " + PpiOptions.getStageFrom());
         System.out.println("stage                  = " + StageResolver.resolveOrNull());
+    }
+
+    @Test
+    public void emptyTelemetryPathGivesNoSelectors() {
+        Assertions.assertThat(PropertyLoader.load("", null)).isEmpty();
     }
 }

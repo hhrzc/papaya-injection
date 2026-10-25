@@ -44,7 +44,7 @@ public class PlaywrightHandler extends AbstractInvocationHandler<Locator, Locato
                 throw new UnexpectedParameterException(
                         """
                                 Unexpected parameter type at index %d in method with selector [%s].
-                                Expected a String parameter with @Param annotation or a PostfixLocator.");
+                                Expected a String or Integer parameter with @Param annotation or a PostfixLocator.");
                                 """.formatted(i, selector)
                 );
             }
@@ -64,10 +64,10 @@ public class PlaywrightHandler extends AbstractInvocationHandler<Locator, Locato
         return new LocatorSupplier() {
             @Override
             public Locator apply(com.microsoft.playwright.Page page) {
-                Locator locator = page.locator(finalSelector);
                 if (page == null) {
                     throw new IllegalArgumentException("PPU Engine Fault: Page cannot be null when calling " + method.getName());
                 }
+                Locator locator = page.locator(finalSelector);
                 return postfix == null ? locator : postfix.apply(locator);
             }
 

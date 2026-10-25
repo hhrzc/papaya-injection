@@ -21,7 +21,7 @@ dependencies {
     api project(':ppi-core')
     api project(':common-invocation-handler')
     compileOnly "org.seleniumhq.selenium:selenium-java:${seleniumVersion}"
-    testImplementation "org.mockito:mockito-core:${mokitoVersion}"
+    testImplementation "org.mockito:mockito-core:${mockitoVersion}"
     testImplementation "org.seleniumhq.selenium:selenium-java:${seleniumVersion}"
     testImplementation platform("org.junit:junit-bom:${junitBomVersion}")
     testImplementation 'org.junit.jupiter:junit-jupiter'
@@ -33,35 +33,8 @@ test {
 }
 
 mavenPublishing {
-    publishToMavenCentral()
-    signAllPublications()
-
     pom {
         name = 'PPI Selenium Java'
         description = 'Selenium integration for the Papaya Injection test automation library (plain Java, no Spring).'
-        inceptionYear = '2026'
-        url = 'https://github.com/hhrzc/papaya-injection'
-
-        licenses {
-            license {
-                name = 'MIT License'
-                url = 'https://opensource.org/licenses/MIT'
-                distribution = 'https://opensource.org/licenses/MIT'
-            }
-        }
-
-        developers {
-            developer {
-                id = 'hhrzc'
-                name = 'Valentyn'
-                url = 'https://github.com/hhrzc'
-            }
-        }
-
-        scm {
-            url = 'https://github.com/hhrzc/papaya-injection'
-            connection = 'scm:git:git://github.com/hhrzc/papaya-injection.git'
-            developerConnection = 'scm:git:ssh://git@github.com/hhrzc/papaya-injection.git'
-        }
     }
 }

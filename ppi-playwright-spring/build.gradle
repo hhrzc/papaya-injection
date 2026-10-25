@@ -26,7 +26,7 @@ dependencies {
     compileOnly "org.springframework:spring-context:${springVersion}"
     compileOnly "com.microsoft.playwright:playwright:${playwrightVersion}"
     //test
-    testImplementation "org.mockito:mockito-core:${mokitoVersion}"
+    testImplementation "org.mockito:mockito-core:${mockitoVersion}"
     testImplementation "com.microsoft.playwright:playwright:${playwrightVersion}"
     testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
     testImplementation platform("org.junit:junit-bom:${junitBomVersion}")
@@ -39,35 +39,8 @@ test {
 }
 
 mavenPublishing {
-    publishToMavenCentral()
-    signAllPublications()
-
     pom {
         name = 'PPI Playwright Spring'
         description = 'Spring integration for Playwright support in the Papaya Injection test automation library.'
-        inceptionYear = '2026'
-        url = 'https://github.com/hhrzc/papaya-injection'
-
-        licenses {
-            license {
-                name = 'MIT License'
-                url = 'https://opensource.org/licenses/MIT'
-                distribution = 'https://opensource.org/licenses/MIT'
-            }
-        }
-
-        developers {
-            developer {
-                id = 'hhrzc'
-                name = 'Valentyn'
-                url = 'https://github.com/hhrzc'
-            }
-        }
-
-        scm {
-            url = 'https://github.com/hhrzc/papaya-injection'
-            connection = 'scm:git:git://github.com/hhrzc/papaya-injection.git'
-            developerConnection = 'scm:git:ssh://git@github.com/hhrzc/papaya-injection.git'
-        }
     }
 }

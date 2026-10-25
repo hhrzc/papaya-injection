@@ -18,8 +18,9 @@ repositories {
 }
 
 dependencies {
+    implementation("io.github.hhrzc:out-object:0.1.12")
     implementation project(":ppi-core")
-    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation platform("org.junit:junit-bom:${junitBomVersion}")
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
@@ -29,35 +30,8 @@ test {
 }
 
 mavenPublishing {
-    publishToMavenCentral()
-    signAllPublications()
-
     pom {
         name = 'Common Invocation Handler'
         description = 'Shared invocation-handling utilities used across the Papaya Injection test automation library.'
-        inceptionYear = '2026'
-        url = 'https://github.com/hhrzc/papaya-injection'
-
-        licenses {
-            license {
-                name = 'MIT License'
-                url = 'https://opensource.org/licenses/MIT'
-                distribution = 'https://opensource.org/licenses/MIT'
-            }
-        }
-
-        developers {
-            developer {
-                id = 'hhrzc'
-                name = 'Valentyn'
-                url = 'https://github.com/hhrzc'
-            }
-        }
-
-        scm {
-            url = 'https://github.com/hhrzc/papaya-injection'
-            connection = 'scm:git:git://github.com/hhrzc/papaya-injection.git'
-            developerConnection = 'scm:git:ssh://git@github.com/hhrzc/papaya-injection.git'
-        }
     }
 }

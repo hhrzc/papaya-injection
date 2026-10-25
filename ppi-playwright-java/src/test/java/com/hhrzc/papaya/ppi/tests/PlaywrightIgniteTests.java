@@ -72,4 +72,5 @@ public class PlaywrightIgniteTests {
         Assertions.assertEquals(expected, actual);
         Assertions.assertEquals("Overrided", locatorSupplier.getVariableName());
     }
+
 }

@@ -7,7 +7,7 @@ import com.hhrzc.papaya.ppi.exceptions.SelectorMismatchKeyException;
 import com.hhrzc.papaya.ppi.model.BY;
 import com.hhrzc.papaya.ppi.model.PostfixWebElement;
 import com.hhrzc.papaya.ppi.model.WebElementSupplier;
-import com.hhrzc.papaya.ppi.utils.LocatorExtractor;
+import com.hhrzc.papaya.ppi.utils.ByExtractor;
 import com.hhrzc.papaya.ppi.utils.Utils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -20,7 +20,6 @@ import java.util.Properties;
 public class SeleniumHandler extends AbstractInvocationHandler<WebElement, WebElementSupplier, PostfixWebElement> {
 
     private static final BY DEFAULT_BY = BY.XPATH;
-    private BY processedBy;
 
     public SeleniumHandler(Properties selectors) {
         super(selectors);
@@ -29,15 +28,10 @@ public class SeleniumHandler extends AbstractInvocationHandler<WebElement, WebEl
     @Override
     protected String injectParameters(Method method, Object[] args, String selector) {
         String processedSelector = selector;
-         processedBy = DEFAULT_BY;
          if (args != null && args.length > 0) {
              int start = 0;
              if (method.getParameters()[0].getType() == BY.class) {
-                 processedBy = (BY) args[0];
                  start = 1;//offset if first parameter is BY - selenium might have only one (and first) parameter for BY and the rest for @Param
-             } else {
-                 //if BY is not defined, we will try to determine it based on the selector format (XPath or CSS)
-                 processedBy = Utils.isXPath(selector) ? BY.XPATH : BY.CSS;
              }
              try {
                  if (args.length > start) {
@@ -48,8 +42,6 @@ public class SeleniumHandler extends AbstractInvocationHandler<WebElement, WebEl
                          "The @Param annotation missing for the method " + method.getName() +
                                  ". Order number of the parameter: " + e.getParamsOrder());
              }
-         } else {
-                processedBy = Utils.isXPath(selector) ? BY.XPATH : BY.CSS;
          }
 
          return processedSelector;
@@ -57,7 +49,7 @@ public class SeleniumHandler extends AbstractInvocationHandler<WebElement, WebEl
 
     @Override
     protected WebElementSupplier createSupplier(Method method, String finalSelector, PostfixWebElement postfix, Object... args) {
-        final By postfixBy = LocatorExtractor.extractByFromArg(postfix);
+        BY processedBy = defineBy(method, finalSelector, args);
         return new WebElementSupplier() {
             @Override
             public WebElement apply(WebDriver driver) {
@@ -75,8 +67,9 @@ public class SeleniumHandler extends AbstractInvocationHandler<WebElement, WebEl
 
             @Override
             public String getSelectorValue() {
-                return processedBy.prefixValue() + ": " + finalSelector + (postfixBy == null ? "" :
-                        ", " + postfixBy);
+                String postfixByValue = ByExtractor.extractByFromPostfix(postfix);
+                return processedBy.prefixValue() + ": " + finalSelector + (postfixByValue == null ? "" :
+                        ", " + postfixByValue);
             }
 
             @Override
@@ -87,6 +80,15 @@ public class SeleniumHandler extends AbstractInvocationHandler<WebElement, WebEl
                         '}';
             }
         };
+    }
+
+    private BY defineBy(Method method, String finalSelector, Object[] args) {
+        if (args != null && args.length > 0) {
+            if (method.getParameters()[0].getType() == BY.class) {
+                return (BY) args[0];
+            }
+        }
+        return Utils.isXPath(finalSelector) ? BY.XPATH : BY.CSS;
     }
 
     @Override

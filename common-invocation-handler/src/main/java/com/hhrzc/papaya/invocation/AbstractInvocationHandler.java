@@ -5,6 +5,8 @@ import com.hhrzc.papaya.ppi.annotations.Sensor;
 import com.hhrzc.papaya.ppi.annotations.Param;
 import com.hhrzc.papaya.ppi.annotations.Telemetry;
 import com.hhrzc.papaya.ppi.exceptions.*;
+import com.hhrzc.tools.out.Out;
+import com.hhrzc.tools.out.impl.OutObject;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -63,6 +65,7 @@ public abstract class AbstractInvocationHandler<L, S extends Function<?, L>, P e
         String rawSelector = resolveSelector(method, sensor);
         P postfix = extractSinglePostfix(method, args);
         final String finalSelector;
+        final Out<String> byPrefix = new OutObject<>();
 
         try {
             finalSelector = injectParameters(method, args, rawSelector);
@@ -73,7 +76,7 @@ public abstract class AbstractInvocationHandler<L, S extends Function<?, L>, P e
                             ". Order number of the parameter: " + e.getParamsOrder());
         }
 
-        return createSupplier(method, finalSelector, postfix, (Object) null);
+        return createSupplier(method, finalSelector, postfix, args);
     }
 
     private P extractSinglePostfix(Method method, Object[] args) {

@@ -97,6 +97,7 @@ class StageSelectorsTest {
         // %dev.byMethodName exists, but there is no %prod.byMethodName
         assertThat(page.byMethodName().getSelectorValue())
                 .isEqualTo("by-method-name-selector");
+
     }
 
     // ---------- unknown stage ----------

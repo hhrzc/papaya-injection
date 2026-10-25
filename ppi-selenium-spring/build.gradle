@@ -33,35 +33,8 @@ test {
 }
 
 mavenPublishing {
-    publishToMavenCentral()
-    signAllPublications()
-
     pom {
         name = 'PPI Selenium Spring'
         description = 'Spring integration for Selenium support in the Papaya Injection test automation library.'
-        inceptionYear = '2026'
-        url = 'https://github.com/hhrzc/papaya-injection'
-
-        licenses {
-            license {
-                name = 'MIT License'
-                url = 'https://opensource.org/licenses/MIT'
-                distribution = 'https://opensource.org/licenses/MIT'
-            }
-        }
-
-        developers {
-            developer {
-                id = 'hhrzc'
-                name = 'Valentyn'
-                url = 'https://github.com/hhrzc'
-            }
-        }
-
-        scm {
-            url = 'https://github.com/hhrzc/papaya-injection'
-            connection = 'scm:git:git://github.com/hhrzc/papaya-injection.git'
-            developerConnection = 'scm:git:ssh://git@github.com/hhrzc/papaya-injection.git'
-        }
     }
 }

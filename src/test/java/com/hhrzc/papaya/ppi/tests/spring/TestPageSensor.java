@@ -5,19 +5,19 @@ import com.hhrzc.papaya.ppi.model.PostfixLocator;
 import com.hhrzc.papaya.ppi.tests.pages.NoFileDefinedPage;
 import com.hhrzc.papaya.ppi.tests.pages.OverrideOkBtnPage;
 import com.hhrzc.papaya.ppi.tests.pages.TestPage;
-import com.hhrzc.papaya.ppi.utils.stage.PpiOptions;
+import com.hhrzc.papaya.ppi.tests.pages.TestStagesPage;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariables;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 
 import static org.mockito.Mockito.*;
 
@@ -28,12 +28,19 @@ public class TestPageSensor {
     @Autowired
     private TestPage testPage;
     @Autowired
+    private TestStagesPage testStagesPage;
+    @Autowired
     private NoFileDefinedPage noFileDefinedPage;
     @Autowired
     private ApplicationContext applicationContext;
 
     private static Page mockPage;
     private static ArgumentCaptor<String> stringArgumentCaptor;
+
+    @BeforeAll
+    public static void initStage(){
+        System.setProperty("my.awesome.project", "prod");
+    }
 
     @BeforeEach
     public void initMock(){
@@ -162,5 +169,21 @@ public class TestPageSensor {
 
         Assertions.assertThat(capturedSelector)
                 .isEqualTo("//hello-world-value");
+    }
+
+
+    @Test
+    @EnabledIfEnvironmentVariables({
+            @EnabledIfEnvironmentVariable(named = "MY_AWESOME_PROJECT", matches = "dev"),
+    })
+    public void byTelemetryPropertyTestViaStageProd(){
+        LocatorSupplier actual = testStagesPage.bySensorProperty();
+        actual.apply(mockPage);
+
+        verify(mockPage).locator(stringArgumentCaptor.capture());
+        String capturedSelector = stringArgumentCaptor.getValue();
+
+        Assertions.assertThat(capturedSelector)
+                .isEqualTo("by-sensor-property-selector.prod");
     }
 }

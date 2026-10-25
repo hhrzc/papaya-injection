@@ -42,8 +42,9 @@ public class PapayaRegistrar implements ImportBeanDefinitionRegistrar {
         Map<String, Object> attrs = metadata.getAnnotationAttributes(ConfigTelemetry.class.getName());
         String[] basePackages = (String[]) attrs.get("value");
         List<String> cleaned = Arrays.stream(basePackages)
-                .map(p -> p.replaceAll("^/|/$", ""))
-                .sorted(Comparator.comparingInt(String::length))
+                .map(p -> p.replace('/', '.').replaceAll("^\\.+|\\.+$", ""))   // "com/x/" -> "com.x"
+                .distinct()
+                .sorted(Comparator.comparingInt(String::length))                 // parents first
                 .toList();
 
         List<String> excludedSubPackages = new ArrayList<>();
@@ -51,7 +52,7 @@ public class PapayaRegistrar implements ImportBeanDefinitionRegistrar {
         //exclude subpackages to avoid scanning the same interfaces multiple times
         for (String pkg : cleaned) {
             boolean isSubPackage = excludedSubPackages.stream()
-                    .anyMatch(parent -> pkg.equals(parent) || pkg.startsWith(parent + "/"));
+                    .anyMatch(parent -> pkg.equals(parent) || pkg.startsWith(parent + "."));
 
             if (!isSubPackage) {
                 excludedSubPackages.add(pkg);
@@ -72,7 +73,7 @@ public class PapayaRegistrar implements ImportBeanDefinitionRegistrar {
                 throw new IllegalStateException("No interfaces found in package: " + pkg + ". " +
                         "Ensure that the package is correct and contains interfaces that extend PpiRepository.");
             }
-            for (BeanDefinition bd : scanner.findCandidateComponents(pkg)) {
+            for (BeanDefinition bd : candidateComponents) {
                 if (definitionSet.contains(bd)) {
                     continue;
                 }
@@ -94,6 +95,12 @@ public class PapayaRegistrar implements ImportBeanDefinitionRegistrar {
         }
     }
 
+    /**
+     * Known limitation (see GitHub issue #1): one invocation handler per application context.
+     * Every META-INF/papaya.properties on the classpath declares a handler. If both
+     * ppi-playwright-spring and ppi-selenium-spring are present, we fail fast instead of
+     * silently giving all @Telemetry interfaces the same handler.
+     */
     private Class<? extends InvocationHandler> determineInvocationHandlerClass() {
         try {
             ClassLoader cl = getClass().getClassLoader();

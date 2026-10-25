@@ -6,6 +6,8 @@ import com.hhrzc.papaya.ppi.utils.stage.StageResolver;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariables;
 
 import java.util.Optional;
 
@@ -103,6 +105,9 @@ class StageResolverTest {
     }
 
     @Test
+    @EnabledIfEnvironmentVariables({
+            @EnabledIfEnvironmentVariable(named = "MY_AWESOME_PROJECT", matches = ".*"),
+    })
     void testEnvFromConfiguration() {
         System.clearProperty(PpiOptions.STAGE_FROM_PROPERTY);
         System.clearProperty("my.awesome.project");
