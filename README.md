@@ -34,13 +34,13 @@ You only need to depend on the module(s) that match your stack — e.g. just `pp
 Add whichever module(s) you need. For example, Playwright with Spring:
 
 ```groovy
-implementation("io.github.hhrzc:ppi-playwright-spring:0.1.0")
+implementation("io.github.hhrzc:ppi-playwright-spring:0.3.1")
 ```
 
 Or plain Selenium, no Spring:
 
 ```groovy
-implementation("io.github.hhrzc:ppi-selenium-java:0.1.0")
+implementation("io.github.hhrzc:ppi-selenium-java:0.3.1")
 ```
 
 Maven:
@@ -49,7 +49,7 @@ Maven:
 <dependency>
     <groupId>io.github.hhrzc</groupId>
     <artifactId>ppi-playwright-spring</artifactId>
-    <version>0.1.0</version>
+    <version>0.3.1</version>
 </dependency>
 ```
 
@@ -191,7 +191,7 @@ public class LoginPageAction{
 1) add the dependency:
 
 ```groovy
-implementation("io.github.hhrzc:ppi-selenium-java:0.1.0")
+implementation("io.github.hhrzc:ppi-selenium-java:0.3.1")
 ```
 
 Maven:
@@ -200,7 +200,7 @@ Maven:
 <dependency>
     <groupId>io.github.hhrzc</groupId>
     <artifactId>ppi-selenium-java</artifactId>
-    <version>0.1.0</version>
+    <version>0.3.1</version>
 </dependency>
 ```
 
@@ -316,6 +316,57 @@ makes, so `locator -> locator.nth(1)` becomes `nth(1)` in Playwright, and
 `e -> e.findElement(By.xpath(...))` becomes `By.xpath: ...` in Selenium.
 This works for simple call chains. If the postfix contains logic that depends on results
 (for example `count()` or `isDisplayed()`), it is described as `custom`.
+
+## Stages (different selectors per environment)
+
+A `.telemetry` file can hold selectors for several environments. Prefix a key with `%<stage>.`:
+
+```properties
+okBtn=button.SignIn
+%dev.okBtn=button.SignIn.dev
+%prod.okBtn=button.SignIn.prod
+```
+
+Stages are **off** by default: only keys without `%` are used. To turn them on, tell Papaya the
+name of **your** variable that holds the stage, once, before the first `ignite()`:
+
+```java
+PpiOptions.setStageFrom("my.stage");
+```
+
+Then choose the stage when you run the tests:
+
+```bash
+./gradlew test -Dmy.stage=prod     # or environment variable MY_STAGE=prod
+```
+
+Rules:
+- A key without a `%<stage>.` version uses its base value.
+- An unknown stage (for example `qa` with no `%qa.` keys) uses base values.
+- The stage is read at `ignite()`. Set it before the first `ignite()` and don't change it during the run.
+- `setStageFrom()` can't be changed after the first `ignite()`.
+  for example in a `static {}` block. A `@ConfigTelemetry(stageFrom = ...)` attribute is planned for 0.4.0.
+
+### Stages in Spring
+
+In Spring, name the property in `@ConfigTelemetry` instead of calling `PpiOptions`:
+
+```java
+@Configuration
+@ConfigTelemetry(value = "com.example.pages", stageFrom = "my.stage")
+public class PapayaConfig {
+}
+```
+
+The value is read from the Spring `Environment`, so any Spring source works, with Spring's usual priority:
+
+```properties
+# application.properties  (or application-prod.properties for the "prod" profile)
+my.stage=prod
+```
+
+`-Dmy.stage=prod` and environment variable `MY_STAGE=prod` work too.
+Without `stageFrom`, or with an empty value, only base selectors are used.
 
 ## License
 

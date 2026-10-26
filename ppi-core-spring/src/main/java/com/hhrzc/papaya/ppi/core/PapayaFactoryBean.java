@@ -19,13 +19,14 @@ import java.net.URL;
  */
 public class PapayaFactoryBean<T> implements FactoryBean<T> {
 
-    private final static String EXT = ".telemetry";
     private final Class<T> interfaceType;
     private final Class<? extends InvocationHandler> invocationHandler;
+    private final String stage;
 
-    public PapayaFactoryBean(Class<T> interfaceType, Class<? extends InvocationHandler> invocationHandler) {
+    public PapayaFactoryBean(Class<T> interfaceType, Class<? extends InvocationHandler> invocationHandler, String stage) {
         this.interfaceType = interfaceType;
         this.invocationHandler = invocationHandler;
+        this.stage = stage;
     }
 
     @SuppressWarnings("unchecked")
@@ -40,7 +41,7 @@ public class PapayaFactoryBean<T> implements FactoryBean<T> {
             throw new PpiRepositoryNotExtendetException(interfaceType.getName());
         }
 
-        return PpiIgniter.ignite(interfaceType, invocationHandler);
+        return PpiIgniter.ignite(interfaceType, invocationHandler, stage);
     }
 
     @Override

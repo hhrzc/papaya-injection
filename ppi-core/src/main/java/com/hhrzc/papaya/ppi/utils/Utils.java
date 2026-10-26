@@ -6,7 +6,7 @@ import java.lang.reflect.Method;
 
 public class Utils {
     public static boolean isXPath(String locator) {
-        if (locator == null || locator.trim().isEmpty()) {
+        if (locator == null || locator.isBlank()) {
             return false;
         }
 
@@ -36,7 +36,7 @@ public class Utils {
 
     public static String getName(Method method){
         Sensor sensor = method.getAnnotation(Sensor.class);
-        if (sensor != null && !sensor.name().isEmpty()) {
+        if (sensor != null && !sensor.name().isBlank()) {
             return sensor.name();
         } else {
             return method.getName();

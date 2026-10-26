@@ -14,11 +14,11 @@ public enum BY {
     PARTIAL_LINK_TEXT(By::partialLinkText, "By.partialLinkText");
 
     private final Function<String, By> byFunction;
-    private String prefixValue;
+    private final String prefixVal;
 
     BY(Function<String, By> byFunction, String prefixValue){
         this.byFunction = byFunction;
-        this.prefixValue = prefixValue;
+        this.prefixVal = prefixValue;
     }
 
     public Function<String, By> by(){
@@ -26,6 +26,6 @@ public enum BY {
     }
 
     public String prefixValue(){
-        return prefixValue;
+        return prefixVal;
     }
 }

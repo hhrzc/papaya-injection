@@ -4,10 +4,11 @@ package com.hhrzc.papaya.invocation;
 import com.hhrzc.papaya.ppi.annotations.Sensor;
 import com.hhrzc.papaya.ppi.annotations.Param;
 import com.hhrzc.papaya.ppi.annotations.Telemetry;
-import com.hhrzc.papaya.ppi.exceptions.*;
-import com.hhrzc.tools.out.Out;
-import com.hhrzc.tools.out.impl.OutObject;
-
+import com.hhrzc.papaya.ppi.exceptions.ParamAnnotationMissingException;
+import com.hhrzc.papaya.ppi.exceptions.SelectorMismatchKeyException;
+import com.hhrzc.papaya.ppi.exceptions.SensorAnnotationMissedException;
+import com.hhrzc.papaya.ppi.exceptions.TelemetryFileNotDeterminedException;
+import com.hhrzc.papaya.ppi.exceptions.UnexpectedParameterException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -65,7 +66,6 @@ public abstract class AbstractInvocationHandler<L, S extends Function<?, L>, P e
         String rawSelector = resolveSelector(method, sensor);
         P postfix = extractSinglePostfix(method, args);
         final String finalSelector;
-        final Out<String> byPrefix = new OutObject<>();
 
         try {
             finalSelector = injectParameters(method, args, rawSelector);
@@ -79,7 +79,7 @@ public abstract class AbstractInvocationHandler<L, S extends Function<?, L>, P e
         return createSupplier(method, finalSelector, postfix, args);
     }
 
-    private P extractSinglePostfix(Method method, Object[] args) {
+    private P extractSinglePostfix(Method method, Object ... args) {
 
         if (args == null) {
             return null;
@@ -90,7 +90,8 @@ public abstract class AbstractInvocationHandler<L, S extends Function<?, L>, P e
                 .map(arg -> (P) arg)
                 .collect(Collectors.toSet());
 
-        if (postfixLocators.size() > 1) {
+        final int maxPostfixCount = 1;
+        if (postfixLocators.size() > maxPostfixCount) {
             throw new IllegalArgumentException("PPU Violation: Only one PostfixLocator is allowed in the method " + method.getName());
         }
 
@@ -102,7 +103,7 @@ public abstract class AbstractInvocationHandler<L, S extends Function<?, L>, P e
     }
 
     private String resolveSelector(Method method, Sensor sensor) {
-        String selector = null;
+        String selector;
         String key = sensor.value();
 
         if (key.isEmpty()) {//return method name as key to look up selector in unit file
@@ -111,10 +112,6 @@ public abstract class AbstractInvocationHandler<L, S extends Function<?, L>, P e
             selector = key.substring(1);
         } else {//return the selector from the unit file using the key defined in the annotation
             selector = getProperty(key, method);
-        }
-
-        if (selector == null) {
-            throw new RuntimeException("PPU Telemetry Fault: Key [" + key + "] not found in unit file.");
         }
 
         return selector;
@@ -140,7 +137,7 @@ public abstract class AbstractInvocationHandler<L, S extends Function<?, L>, P e
 
         //verify if there are any unresolved parameters in the selector after processing
         if ((processedSelector.contains("{") && processedSelector.contains("}")) &&
-                processedSelector.indexOf("{") < processedSelector.indexOf("}")
+                processedSelector.indexOf('{') < processedSelector.indexOf('}')
         ) {
             throw new SelectorMismatchKeyException("Unresolved placeholders found", processedSelector);
         }

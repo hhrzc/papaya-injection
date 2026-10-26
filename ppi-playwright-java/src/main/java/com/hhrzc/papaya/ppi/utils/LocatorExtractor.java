@@ -13,6 +13,7 @@ public final class LocatorExtractor {
 
     private static final ThreadLocal<List<String>> CALLS = new ThreadLocal<>();
 
+    @SuppressWarnings("PMD.UseProperClassLoader")
     private static final Locator RECORDER = (Locator) Proxy.newProxyInstance(
             Locator.class.getClassLoader(),
             new Class<?>[]{Locator.class},
@@ -21,7 +22,7 @@ public final class LocatorExtractor {
                     return switch (method.getName()) {
                         case "toString" -> "LocatorExtractor";
                         case "hashCode" -> System.identityHashCode(proxy);
-                        case "equals" -> proxy == args[0];
+                        case "equals" -> proxy.equals(args[0]);
                         default -> null;
                     };
                 }
@@ -38,14 +39,12 @@ public final class LocatorExtractor {
         try {
             postfix.apply(RECORDER);
             return String.join(".", calls);
-        } catch (RuntimeException e) {
-            return "custom";   // postfix has logic the recorder can't follow
         } finally {
             CALLS.remove();
         }
     }
 
-    private static String formatArgs(Object[] args) {
+    private static String formatArgs(Object ... args) {
         if (args == null) return "";
         return Arrays.stream(args)
                 .map(a -> a instanceof String s ? "\"" + s + "\"" : String.valueOf(a))

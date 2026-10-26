@@ -1,104 +1,88 @@
 package com.hhrzc.papaya.ppi.utils.stage;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
-
 /**
- * Global options of the library for plain-Java usage. One set per JVM.
+ * Global stage option of the library for plain-Java usage. One per JVM.
  *
- * The only option so far is "stage from": the NAME of the user's own variable
- * that holds the stage. The library never stores the stage itself.
+ * <p>Stages are <b>off</b> by default: only base selectors are used.
+ * To turn them on, tell the library the NAME of YOUR variable that holds the stage,
+ * once, before the first {@code ignite()}:
  *
- * Where the name comes from (first match wins):
- *   1. PpiOptions.setStageFrom("my.project.stage")        - in code, before the first ignite()
- *   2. -Dppi.stage.from=... / env PPI_STAGE_FROM=...       - same lookup rule as everything else
- *   3. ppi.stage.from=... in ppi.properties on the classpath
- *   4. "pi.stage" - default (-Dpi.stage=dev or env PI_STAGE=dev)
+ * <pre>{@code
+ * PpiOptions.setStageFrom("my.stage");
+ * // run with -Dmy.stage=prod  or env MY_STAGE=prod  ->  %prod.* selectors are used
+ * }</pre>
  *
- * Spring users configure ppi.stage.from in application.properties instead;
- * ppi.properties is not read in Spring mode.
+ * <p>The library never stores the stage itself, only the variable name.
+ * The stage value is read at every {@code ignite()}, so set it before the first
+ * {@code ignite()} and don't change it during the run.
+ *
+ * <p>Spring (0.3.x): call {@code setStageFrom(...)} before the Spring context starts,
+ * for example in a {@code static {}} block of the test base class.
+ * A {@code @ConfigTelemetry(stageFrom = ...)} attribute is planned for 0.4.0.
  */
+
+@SuppressWarnings("PMD.AvoidUsingVolatile")
 public final class PpiOptions {
 
-    public static final String STAGE_FROM_PROPERTY = "ppi.stage.from";
-    public static final String DEFAULT_STAGE_FROM = "pi.stage";
-    public static final String CONFIG_FILE = "ppi.properties";
+    private static final Object LOCK = new Object();
 
-    private static volatile String stageFrom;   // set in code; null = not set
+    private static volatile String stageFrom;   // name of the user's variable; null = stages are off
     private static volatile boolean frozen;     // true after the first ignite()
 
     private PpiOptions() {
     }
 
     /**
-     * Name of the variable that holds the stage, written in property style
-     * (my.project.stage); its env form MY_PROJECT_STAGE is found automatically.
-     * Must be called before the first ignite(). Repeating the same value is allowed,
-     * a different value is an error.
+     * Sets the name of the variable that holds the stage, written in property style
+     * ({@code my.stage}); its env form {@code MY_STAGE} is found automatically.
+     *
+     * <p>Must be called before the first {@code ignite()}.
+     * Repeating the same value is allowed, a different value is an error.
+     *
+     * @throws IllegalArgumentException if the name is null or blank
+     * @throws IllegalStateException    if called after the first {@code ignite()},
+     *                                  or with a different name than before
      */
-    public static synchronized void setStageFrom(String name) {
-        if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("PPU Config Fault: stage variable name must not be blank");
+    public static void setStageFrom(String name) {
+        synchronized (LOCK) {
+            if (name == null || name.isBlank()) {
+                throw new IllegalArgumentException("PPI Config Fault: stage variable name must not be blank");
+            }
+            String trimmed = name.trim();
+            if (trimmed.equals(stageFrom)) {
+                return;
+            }
+            if (frozen) {
+                throw new IllegalStateException(
+                        "PPI Config Fault: setStageFrom() must be called before the first ignite()");
+            }
+            if (stageFrom != null) {
+                throw new IllegalStateException(
+                        "PPI Config Fault: stage variable is already set to [" + stageFrom
+                                + "], cannot change it to [" + trimmed + "]");
+            }
+            stageFrom = trimmed;
         }
-        String trimmed = name.trim();
-        if (trimmed.equals(stageFrom)) {
-            return;
-        }
-        if (frozen) {
-            throw new IllegalStateException(
-                    "PPU Config Fault: options must be set before the first ignite(); stage is already read from: "
-                            + getStageFrom());
-        }
-        if (stageFrom != null) {
-            throw new IllegalStateException(
-                    "PPU Config Fault: stage variable is already set to [" + stageFrom
-                            + "], cannot change it to [" + trimmed + "]");
-        }
-        stageFrom = trimmed;
-    }
-
-    /** Name of the variable to read the stage from. Never null. */
-    public static String getStageFrom() {
-        String fromCode = stageFrom;
-        if (fromCode != null) {
-            return fromCode;
-        }
-        String debug = SystemLookup.find(STAGE_FROM_PROPERTY)
-                .or(() -> SystemLookup.firstNonBlank(FileConfig.STAGE_FROM))
-                .orElse(DEFAULT_STAGE_FROM);
-        return debug;
-    }
-
-    /** Called by the library on the first ignite(): from now on options can't change. */
-    public static void freeze() {
-        frozen = true;
-    }
-
-    public static void dropStageFrom() {
-        stageFrom = null;
     }
 
     /**
-     * Lazy holder: ppi.properties is read once, on first access,
-     * and the JVM guarantees that happens exactly once, even with parallel threads.
-     * STAGE_FROM is null when the file or the property is missing.
+     * Name of the variable to read the stage from.
+     *
+     * @return the name given to {@link #setStageFrom(String)}, or {@code null} if stages are off
      */
-    private static final class FileConfig {
-        static final String STAGE_FROM = readStageFromFile();
+    public static String getStageFrom() {
+        synchronized (LOCK) {
+            return stageFrom;
+        }
+    }
 
-        private static String readStageFromFile() {
-            ClassLoader loader = Thread.currentThread().getContextClassLoader();
-            try (InputStream in = loader.getResourceAsStream(CONFIG_FILE)) {
-                if (in == null) {
-                    return null;
-                }
-                Properties props = new Properties();
-                props.load(in);
-                return props.getProperty(STAGE_FROM_PROPERTY);
-            } catch (IOException e) {
-                throw new IllegalStateException("PPU Config Fault: cannot read " + CONFIG_FILE, e);
-            }
+    /**
+     * Internal: called by the library on every {@code ignite()}.
+     * From the first call on, {@link #setStageFrom(String)} can't change the name anymore.
+     */
+    public static void freeze() {
+        synchronized (LOCK) {
+            frozen = true;
         }
     }
 }

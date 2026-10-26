@@ -16,6 +16,7 @@ public class ByExtractor {
 
     private final static ThreadLocal<List<String>> CALLS = new ThreadLocal<>();
 
+    @SuppressWarnings("PMD.UseProperClassLoader")
     private static final WebElement RECORDER = (WebElement) Proxy.newProxyInstance(
             WebElement.class.getClassLoader(),
             new Class<?>[]{WebElement.class},
@@ -24,7 +25,7 @@ public class ByExtractor {
                     return switch (method.getName()) {
                         case "toString" -> "ByExtractor";
                         case "hashCode" -> System.identityHashCode(proxy);
-                        case "equals" -> proxy == args[0];
+                        case "equals" -> proxy.equals(args[0]);
                         default -> null;
                     };
                 }
@@ -41,22 +42,6 @@ public class ByExtractor {
                 return null;
             });
 
-    public static By extractByFromArg(Object arg) {
-        if (arg == null) return null;
-        try {
-            Field byField = arg.getClass().getDeclaredField("arg$1");
-            byField.setAccessible(true);
-            Object byValue = byField.get(arg);
-
-            if (byValue instanceof By) {
-                return (By) byValue;
-            }
-        } catch (NoSuchFieldException | IllegalAccessException e) {//todo: mage logging
-            System.err.println("Can't get By through reflection:: " + e.getMessage());
-        }
-        return null;
-    }
-
     public static String extractByFromPostfix(PostfixWebElement postfix) {
         if (postfix == null) return null;                    // no postfix → no description
         if (postfix instanceof PostfixWebElement.Named) {
@@ -67,18 +52,10 @@ public class ByExtractor {
         try {
             postfix.apply(RECORDER);
             return calls.isEmpty() ? "custom" : String.join(", ", calls);
-        } catch (RuntimeException e) {
-            return "custom";
         } finally {
             CALLS.remove();
         }
     }
 
-    private static String formatArgs(Object[] args) {
-        if (args == null) return "";
-        return Arrays.stream(args)
-                .map(a -> a instanceof String s ? "\"" + s + "\"" : String.valueOf(a))
-                .collect(Collectors.joining(","));
-    }
 }
 

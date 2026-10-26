@@ -19,8 +19,6 @@ import java.util.Properties;
 
 public class SeleniumHandler extends AbstractInvocationHandler<WebElement, WebElementSupplier, PostfixWebElement> {
 
-    private static final BY DEFAULT_BY = BY.XPATH;
-
     public SeleniumHandler(Properties selectors) {
         super(selectors);
     }
@@ -28,23 +26,17 @@ public class SeleniumHandler extends AbstractInvocationHandler<WebElement, WebEl
     @Override
     protected String injectParameters(Method method, Object[] args, String selector) {
         String processedSelector = selector;
-         if (args != null && args.length > 0) {
-             int start = 0;
-             if (method.getParameters()[0].getType() == BY.class) {
-                 start = 1;//offset if first parameter is BY - selenium might have only one (and first) parameter for BY and the rest for @Param
-             }
-             try {
-                 if (args.length > start) {
-                     processedSelector = addParams(selector, method.getParameters(), args, start);
-                 }
-             } catch (ParamAnnotationMissingException e) {
-                 throw new ParamAnnotationMissingException(
-                         "The @Param annotation missing for the method " + method.getName() +
-                                 ". Order number of the parameter: " + e.getParamsOrder());
-             }
-         }
+        if (args != null && args.length > 0) {
+            int start = 0;
+            if (method.getParameters()[0].getType() == BY.class) {
+                start = 1;//offset if first parameter is BY - selenium might have only one (and first) parameter for BY and the rest for @Param
+            }
+            if (args.length > start) {
+                processedSelector = addParams(selector, method.getParameters(), args, start);
+            }
+        }
 
-         return processedSelector;
+        return processedSelector;
     }
 
     @Override
@@ -82,7 +74,7 @@ public class SeleniumHandler extends AbstractInvocationHandler<WebElement, WebEl
         };
     }
 
-    private BY defineBy(Method method, String finalSelector, Object[] args) {
+    private BY defineBy(Method method, String finalSelector, Object ... args) {
         if (args != null && args.length > 0) {
             if (method.getParameters()[0].getType() == BY.class) {
                 return (BY) args[0];
@@ -100,7 +92,7 @@ public class SeleniumHandler extends AbstractInvocationHandler<WebElement, WebEl
         String processedSelector = selector;
         for (int i = start; i < args.length; i++) {
             Parameter parameter = parameters[i];
-            if(PostfixWebElement.class.isAssignableFrom(parameter.getType())) {
+            if (PostfixWebElement.class.isAssignableFrom(parameter.getType())) {
                 continue; //skip PostfixLocator parameters
             }
             Param paramAnnotation = parameters[i].getAnnotation(Param.class);
@@ -115,7 +107,7 @@ public class SeleniumHandler extends AbstractInvocationHandler<WebElement, WebEl
         }
 
         if ((processedSelector.contains("{") && processedSelector.contains("}")) &&
-                processedSelector.indexOf("{") < processedSelector.indexOf("}")
+                processedSelector.indexOf('{') < processedSelector.indexOf('}')
         ) {
             throw new SelectorMismatchKeyException("Unresolved placeholders found", processedSelector);
         }

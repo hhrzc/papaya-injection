@@ -1,10 +1,11 @@
 plugins {
     id 'java-library'
     id 'com.vanniktech.maven.publish' version '0.37.0' apply false   // available to modules, NOT applied to root
+    id 'com.github.spotbugs' version '6.5.13' apply false
 }
 
 group = 'io.github.hhrzc'
-version = '0.3.0'
+version = '0.3.1'
 
 java {
     toolchain {
@@ -40,11 +41,16 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    // Environment variables for StageEnvironmentTest.
+    environment 'PPI_TEST_ENV_STAGE', 'prod'        // env style of the name "ppi.test.env.stage"
+    environment 'ppi.test.exact.stage', 'dev'      // exact name (rare, but supported)
 }
 
 subprojects {
     apply plugin: 'java-library'
     apply plugin: 'com.vanniktech.maven.publish'
+    apply plugin: 'pmd'
+    apply plugin: 'com.github.spotbugs'
 
     group = 'io.github.hhrzc'
     version = rootProject.version
@@ -70,6 +76,32 @@ subprojects {
             }
         }
     }
+
+    // ---------- PMD: code smells in the source ----------
+    pmd {
+        toolVersion = '7.28.0'
+        consoleOutput = true          // print problems in the build output
+        ignoreFailures = true         // start with reports only, don't break the build yet
+        ruleSets = []                 // turn off Gradle's default rule list...
+        ruleSetFiles = rootProject.files('config/pmd/ruleset.xml')   // ...and use ours
+    }
+
+    // ---------- SpotBugs: real bugs in the bytecode ----------
+    spotbugs {
+        ignoreFailures = true         // reports only, for now
+        effort = 'MAX'
+        reportLevel = 'MEDIUM'
+    }
+
+    tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach {
+        reports {
+            html { required = true }  // a readable HTML report
+        }
+    }
+
+    // analyze the library code only, not the tests
+    tasks.named('pmdTest') { enabled = false }
+    tasks.named('spotbugsTest') { enabled = false }
 }
 
 tasks.withType(Test).configureEach {

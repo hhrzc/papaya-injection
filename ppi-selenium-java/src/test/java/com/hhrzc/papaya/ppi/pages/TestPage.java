@@ -23,4 +23,6 @@ public interface TestPage {
     WebElementSupplier byCssDetermined();
     @Sensor("$//div.first")
     WebElementSupplier withPostfix(PostfixWebElement postfix);
+    @Sensor("$//div[{x}]")
+    WebElementSupplier secondParamNotAnnotated(@Param("x") String x, String y);
 }

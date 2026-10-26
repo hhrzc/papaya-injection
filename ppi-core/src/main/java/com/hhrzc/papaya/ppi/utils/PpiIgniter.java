@@ -11,27 +11,39 @@ import java.lang.reflect.Proxy;
 import java.net.URL;
 import java.util.Properties;
 
-/*
-    * Serves as a utility for loading properties based on the @PapayaUnit annotation.
+/**
+ * Creates proxy instances of interfaces annotated with {@link Telemetry}.
+ * Loads the selectors from the .telemetry file, applying the current stage (see {@link PpiOptions}).
  */
 
-public abstract class PpiIgniter {
+public class PpiIgniter {
 
-    private static Properties getProperties(Class<?> interfaceType) {
+    private static Properties getProperties(Class<?> interfaceType, String stage) {
         Telemetry unit = interfaceType.getAnnotation(Telemetry.class);
-        if (unit == null) {
-            throw new RuntimeException("PPU Fault: Missing @PapayaUnit on " + interfaceType.getSimpleName());
-        }
-        return PropertyLoader.load(unit.value(), StageResolver.resolveOrNull());
+        return PropertyLoader.load(unit.value(), stage);
     }
 
     @SuppressWarnings("unchecked")
     public static <T> T ignite(Class<T> interfaceType,
                                   Class<? extends InvocationHandler> handlerType) {
+        T t = create(interfaceType, handlerType, StageResolver.resolveOrNull());
+        PpiOptions.freeze();
+        return t;
+    }
 
+    public static <T> T ignite(Class<T> interfaceType,
+                               Class<? extends InvocationHandler> handlerType,
+                               String stage) {
+        return create(interfaceType, handlerType, stage);
+    }
+
+    @SuppressWarnings({"unchecked", "PMD.UseProperClassLoader"})
+    private static <T> T create(Class<T> interfaceType,
+                                Class<? extends InvocationHandler> handlerType,
+                                String stage) {
         verifyInterface(interfaceType);
-        Properties selectors = getProperties(interfaceType);
 
+        Properties selectors = getProperties(interfaceType, stage);
         InvocationHandler handler;
         try {
             handler = handlerType
@@ -56,8 +68,8 @@ public abstract class PpiIgniter {
                 handler
         );
 
-        // Freeze the PpiOptions to prevent further modifications
-        // Means that user can't change stage (environment) during pages instantiation, which could lead to inconsistent behavior.
+        // From now on the stage variable name can't change:
+        // all interfaces of this run read the stage from the same variable.
         PpiOptions.freeze();
 
         return t;
@@ -65,6 +77,9 @@ public abstract class PpiIgniter {
 
     private static <T> void verifyInterface(Class<T> interfaceType) {
         Telemetry telemetryAnnotation = interfaceType.getAnnotation(Telemetry.class);
+        if (telemetryAnnotation == null) {
+            throw new IllegalStateException("PPI Fault: Missing @Telemetry on " + interfaceType.getName());
+        }
         String unitPath = telemetryAnnotation.value();
 
         // Check if the value is blank/empty

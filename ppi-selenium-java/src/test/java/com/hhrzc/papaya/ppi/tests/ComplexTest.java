@@ -1,6 +1,7 @@
 package com.hhrzc.papaya.ppi.tests;
 
 import com.hhrzc.papaya.ppi.core.WebElementIgniter;
+import com.hhrzc.papaya.ppi.exceptions.ParamAnnotationMissingException;
 import com.hhrzc.papaya.ppi.model.BY;
 import com.hhrzc.papaya.ppi.model.WebElementSupplier;
 import com.hhrzc.papaya.ppi.pages.TestPage;
@@ -85,5 +86,16 @@ public class ComplexTest {
         } finally {
             pool.shutdownNow();
         }
+    }
+
+    @Test
+    public void paramMissingReportsRealIndex() {
+        TestPage page = WebElementIgniter.ignite(TestPage.class);
+
+        ParamAnnotationMissingException e = Assertions.assertThrows(ParamAnnotationMissingException.class,
+                () -> page.secondParamNotAnnotated("a", "b"));
+
+        // the second parameter (index 1) has no @Param
+        Assertions.assertTrue(e.getMessage().contains("parameter: 1"), e.getMessage());
     }
 }

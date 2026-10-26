@@ -1,8 +1,6 @@
 package com.hhrzc.papaya.ppi.tests.unit;
 
 import com.hhrzc.papaya.ppi.utils.PropertyLoader;
-import com.hhrzc.papaya.ppi.utils.stage.PpiOptions;
-import com.hhrzc.papaya.ppi.utils.stage.StageResolver;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -106,23 +104,6 @@ class PropertyLoaderTest {
         assertThat(dev).isNotSameAs(prod);
         assertThat(dev.getProperty("okBtn")).isEqualTo("button.SignIn.dev");
         assertThat(prod.getProperty("okBtn")).isEqualTo("button.SignIn.prod");
-    }
-
-    // ------------ load ppi.stage.from value ---------
-    @Test
-    void ppiStageFromTest(){
-        final String expected = "my.awesome.project";
-        final String actual = PpiOptions.getStageFrom();
-
-        assertThat(actual).isEqualTo(expected);
-    }
-
-    @Test
-    void debugEnvironment() {
-        System.out.println("env MY_AWESOME_PROJECT = " + System.getenv("MY_AWESOME_PROJECT"));
-        System.out.println("ppi.properties         = " + Thread.currentThread().getContextClassLoader().getResource("ppi.properties"));
-        System.out.println("stageFrom              = " + PpiOptions.getStageFrom());
-        System.out.println("stage                  = " + StageResolver.resolveOrNull());
     }
 
     @Test

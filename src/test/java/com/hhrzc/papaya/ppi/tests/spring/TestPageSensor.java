@@ -9,11 +9,8 @@ import com.hhrzc.papaya.ppi.tests.pages.TestStagesPage;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariables;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,6 +19,10 @@ import org.springframework.context.ApplicationContext;
 import static org.mockito.Mockito.*;
 
 
+/**
+ * Stage: @ConfigTelemetry(stageFrom = "ppi.test.spring.stage") in PapayaConfig,
+ * value "prod" from src/test/resources/application.properties.
+ */
 @SpringBootTest
 public class TestPageSensor {
 
@@ -36,11 +37,6 @@ public class TestPageSensor {
 
     private static Page mockPage;
     private static ArgumentCaptor<String> stringArgumentCaptor;
-
-    @BeforeAll
-    public static void initStage(){
-        System.setProperty("my.awesome.project", "prod");
-    }
 
     @BeforeEach
     public void initMock(){
@@ -173,9 +169,6 @@ public class TestPageSensor {
 
 
     @Test
-    @EnabledIfEnvironmentVariables({
-            @EnabledIfEnvironmentVariable(named = "MY_AWESOME_PROJECT", matches = "dev"),
-    })
     public void byTelemetryPropertyTestViaStageProd(){
         LocatorSupplier actual = testStagesPage.bySensorProperty();
         actual.apply(mockPage);

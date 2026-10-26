@@ -35,4 +35,5 @@ import java.lang.annotation.Target;
 @Import(PapayaRegistrar.class)
 public @interface ConfigTelemetry {
     String[] value();
+    String stageFrom() default "";
 }

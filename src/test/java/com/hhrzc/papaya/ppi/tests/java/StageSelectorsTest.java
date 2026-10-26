@@ -3,42 +3,58 @@ package com.hhrzc.papaya.ppi.tests.java;
 import com.hhrzc.papaya.ppi.core.LocatorIgniter;
 import com.hhrzc.papaya.ppi.tests.pages.OverrideOkBtnPage;
 import com.hhrzc.papaya.ppi.tests.pages.TestStagesPage;
-import com.hhrzc.papaya.ppi.tests.pages.TestStagesPage;
+import com.hhrzc.papaya.ppi.tests.support.PpiOptionsReset;
+import com.hhrzc.papaya.ppi.utils.stage.PpiOptions;
 import com.microsoft.playwright.Page;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 /**
- * End-to-end stage tests, from the user's point of view.
+ * End-to-end stage tests, from the user's point of view (plain Java):
  *
- * Setup they rely on:
- *   src/test/resources/ppi.properties   ->  ppi.stage.from=my.awesome.project
- *   environment                         ->  MY_AWESOME_PROJECT=dev
+ * <pre>
+ *   PpiOptions.setStageFrom("my.awesome.project");   // once, before the first ignite()
+ *   -Dmy.awesome.project=dev                          // the stage itself
+ * </pre>
  *
- * The env variable can't be changed from a running JVM, so:
- *   - "dev" comes from the environment,
- *   - "prod" uses -D (System.setProperty), which beats env,
- *   - "no stage" points ppi.stage.from to a variable that doesn't exist.
- *
- * The stage is applied at ignite(), so every test ignites AFTER setting properties.
+ * The stage is applied at ignite(), so every test sets it BEFORE igniting.
+ * test_stage.telemetry:
+ * <pre>
+ *   byMethodName=by-method-name-selector
+ *   by-sensor-property=by-sensor-property-selector
+ *   %dev.byMethodName=by-method-name-selector.dev
+ *   %dev.by-sensor-property=by-sensor-property-selector.dev
+ *   %prod.by-sensor-property=by-sensor-property-selector.prod
+ * </pre>
  */
-@EnabledIfEnvironmentVariable(named = "MY_AWESOME_PROJECT", matches = "dev")
 class StageSelectorsTest {
 
+    private static final String STAGE_VARIABLE = "my.awesome.project";
+
+    @BeforeEach
     @AfterEach
-    void clearSystemProperties() {
-        System.clearProperty("my.awesome.project");
-        System.clearProperty("ppi.stage.from");
+    void reset() {
+        PpiOptionsReset.reset();
+        System.clearProperty(STAGE_VARIABLE);
     }
 
-    // ---------- dev: from the environment variable ----------
+    private static void useStage(String stage) {
+        PpiOptions.setStageFrom(STAGE_VARIABLE);
+        System.setProperty(STAGE_VARIABLE, stage);
+    }
+
+    // ---------- dev ----------
+
     @Test
     void dev_methodNameKey_usesDevSelector() {
+        useStage("dev");
         TestStagesPage page = LocatorIgniter.ignite(TestStagesPage.class);
 
         assertThat(page.byMethodName().getSelectorValue())
@@ -47,6 +63,7 @@ class StageSelectorsTest {
 
     @Test
     void dev_sensorKey_usesDevSelector() {
+        useStage("dev");
         TestStagesPage page = LocatorIgniter.ignite(TestStagesPage.class);
 
         assertThat(page.bySensorProperty().getSelectorValue())
@@ -55,6 +72,7 @@ class StageSelectorsTest {
 
     @Test
     void dev_keyWithoutDevVariant_fallsBackToDefault() {
+        useStage("dev");
         OverrideOkBtnPage page = LocatorIgniter.ignite(OverrideOkBtnPage.class);
 
         assertThat(page.byMethodName().getSelectorValue())
@@ -63,6 +81,7 @@ class StageSelectorsTest {
 
     @Test
     void dev_literalSelector_isNotAffectedByStage() {
+        useStage("dev");
         TestStagesPage page = LocatorIgniter.ignite(TestStagesPage.class);
 
         assertThat(page.bySensorValue().getSelectorValue())
@@ -71,6 +90,7 @@ class StageSelectorsTest {
 
     @Test
     void dev_selectorIsReallyPassedToPlaywright() {
+        useStage("dev");
         Page mockPage = mock(Page.class);
         TestStagesPage page = LocatorIgniter.ignite(TestStagesPage.class);
 
@@ -79,10 +99,11 @@ class StageSelectorsTest {
         verify(mockPage).locator("by-method-name-selector.dev");
     }
 
-    // ---------- prod: -D beats the environment ----------
+    // ---------- prod ----------
+
     @Test
     void prod_sensorKey_usesProdSelector() {
-        System.setProperty("my.awesome.project", "prod");
+        useStage("prod");
         TestStagesPage page = LocatorIgniter.ignite(TestStagesPage.class);
 
         assertThat(page.bySensorProperty().getSelectorValue())
@@ -91,30 +112,41 @@ class StageSelectorsTest {
 
     @Test
     void prod_keyWithoutProdVariant_fallsBackToDefault() {
-        System.setProperty("my.awesome.project", "prod");
+        useStage("prod");
         TestStagesPage page = LocatorIgniter.ignite(TestStagesPage.class);
 
         // %dev.byMethodName exists, but there is no %prod.byMethodName
         assertThat(page.byMethodName().getSelectorValue())
                 .isEqualTo("by-method-name-selector");
-
     }
 
     // ---------- unknown stage ----------
+
     @Test
     void unknownStage_usesDefaults() {
-        System.setProperty("my.awesome.project", "qa");
+        useStage("qa");
         TestStagesPage page = LocatorIgniter.ignite(TestStagesPage.class);
 
         assertThat(page.byMethodName().getSelectorValue()).isEqualTo("by-method-name-selector");
         assertThat(page.bySensorProperty().getSelectorValue()).isEqualTo("by-sensor-property-selector");
     }
 
-    // ---------- no stage at all ----------
+    // ---------- no stage ----------
+
     @Test
-    void noStage_usesDefaults() {
-        // point the library to a variable that is set nowhere
-        System.setProperty("ppi.stage.from", "not.existing.stage");
+    void stagesOff_usesDefaults() {
+        System.setProperty(STAGE_VARIABLE, "dev");     // set, but setStageFrom() was never called
+        TestStagesPage page = LocatorIgniter.ignite(TestStagesPage.class);
+
+        assertThat(page.byMethodName().getSelectorValue()).isEqualTo("by-method-name-selector");
+        assertThat(page.bySensorProperty().getSelectorValue()).isEqualTo("by-sensor-property-selector");
+    }
+
+    @Test
+    @DisabledIfEnvironmentVariable(named = "MY_AWESOME_PROJECT", matches = ".+",
+            disabledReason = "MY_AWESOME_PROJECT is set in your environment, so the variable is not 'unset'")
+    void stageVariableNotSet_usesDefaults() {
+        PpiOptions.setStageFrom(STAGE_VARIABLE);       // name given, but the variable has no value
         TestStagesPage page = LocatorIgniter.ignite(TestStagesPage.class);
 
         assertThat(page.byMethodName().getSelectorValue()).isEqualTo("by-method-name-selector");
@@ -122,13 +154,24 @@ class StageSelectorsTest {
     }
 
     // ---------- ignite timing ----------
+
     @Test
     void stageIsFixedAtIgnite() {
+        useStage("dev");
         TestStagesPage page = LocatorIgniter.ignite(TestStagesPage.class);   // ignited with dev
 
-        System.setProperty("my.awesome.project", "prod");          // changed too late
+        System.setProperty(STAGE_VARIABLE, "prod");                          // changed too late
 
         assertThat(page.bySensorProperty().getSelectorValue())
                 .isEqualTo("by-sensor-property-selector.dev");
+    }
+
+    @Test
+    void setStageFromAfterIgnite_isRejected() {
+        LocatorIgniter.ignite(TestStagesPage.class);                         // first ignite() freezes
+
+        assertThatThrownBy(() -> PpiOptions.setStageFrom(STAGE_VARIABLE))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("before the first ignite()");
     }
 }

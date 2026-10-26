@@ -148,9 +148,7 @@ public class SeleniumIgniteTests {
     @Test
     public void postfixDescriptionInlineLambda() {
         TestPage page = WebElementIgniter.ignite(TestPage.class);
-        By byPostfix = By.xpath("//div.second");
-        PostfixWebElement postfixWebElement = e -> e.findElement(byPostfix);
-        WebElementSupplier supplier = page.withPostfix(postfixWebElement);
+        WebElementSupplier supplier = page.withPostfix(e -> e.findElement(By.xpath("//div.second")));
 
         Assertions.assertEquals("By.xpath: //div.first, By.xpath: //div.second", supplier.getSelectorValue());
     }

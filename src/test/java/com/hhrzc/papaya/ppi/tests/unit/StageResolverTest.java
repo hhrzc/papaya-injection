@@ -1,86 +1,96 @@
 package com.hhrzc.papaya.ppi.tests.unit;
 
+import com.hhrzc.papaya.ppi.tests.support.PpiOptionsReset;
 import com.hhrzc.papaya.ppi.utils.stage.PpiOptions;
 import com.hhrzc.papaya.ppi.utils.stage.StageResolver;
-//import com.hhrzc.papaya.ppi.utils.stage.SystemLookup;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariables;
-
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Only system properties are used here: a running JVM can't change its own
- * environment variables. Run without PI_STAGE / PPI_STAGE_FROM in the environment
- * and without ppi.properties on the test classpath.
+ * PpiOptions + StageResolver rules. Only system properties are used here:
+ * a running JVM can't change its own environment variables.
  */
 class StageResolverTest {
 
+    @BeforeEach
     @AfterEach
-    void clear() {
-        System.clearProperty("pi.stage");
+    void reset() {
+        PpiOptionsReset.reset();
         System.clearProperty("my.project.stage");
-        System.clearProperty(PpiOptions.STAGE_FROM_PROPERTY);
-        System.clearProperty("my.awesome.property");
-        PpiOptions.dropStageFrom();
+        System.clearProperty("ppi.stage.from");
+        System.clearProperty("pi.stage");
+    }
+
+    // ---------- stages are off by default ----------
+
+    @Test
+    void noStageFromMeansStagesAreOff() {
+        System.setProperty("my.project.stage", "prod");   // set, but nobody points to it
+
+        assertThat(PpiOptions.getStageFrom()).isNull();
+        assertThat(StageResolver.resolve()).isEmpty();
+        assertThat(StageResolver.resolveOrNull()).isNull();
     }
 
     @Test
-    void ppiStageFromValueTest() {
-        assertThat(PpiOptions.getStageFrom()).isEqualTo("my.awesome.project");
+    void oldConfigWaysAreIgnored() {
+        // 0.3.0 ways to configure the variable name: no longer supported
+        System.setProperty("ppi.stage.from", "my.project.stage");
+        System.setProperty("my.project.stage", "prod");
+        System.setProperty("pi.stage", "dev");               // old default variable
+
+        assertThat(PpiOptions.getStageFrom()).isNull();
+        assertThat(StageResolver.resolveOrNull()).isNull();
     }
 
-    // ---------- default variable ----------
-    @Test
-    void defaultVariableIsPiStage() {
-        System.setProperty("my.awesome.project", "dev");
+    // ---------- user's own variable ----------
 
-        assertThat(StageResolver.resolveOrNull()).isEqualTo("dev");
+    @Test
+    void stageIsReadFromUsersVariable() {
+        PpiOptions.setStageFrom("my.project.stage");
+        System.setProperty("my.project.stage", "prod");
+
+        assertThat(StageResolver.resolve()).contains("prod");
     }
 
     @Test
-    void nothingSetMeansNoStage() {
-        PpiOptions.setStageFrom("non-defined");
+    void variableNotSetMeansNoStage() {
+        PpiOptions.setStageFrom("my.project.stage");
+
         assertThat(StageResolver.resolve()).isEmpty();
         assertThat(StageResolver.resolveOrNull()).isNull();
     }
 
     @Test
     void valueIsTrimmed() {
-        System.setProperty("my.awesome.project", "  prod ");
-        assertThat(StageResolver.resolve()).contains("prod");
-    }
-
-    // ---------- user's own variable ----------
-
-    @Test
-    void stageFromSetInCode() {
         PpiOptions.setStageFrom("my.project.stage");
-        System.setProperty("my.project.stage", "prod");
-        System.setProperty("pi.stage", "dev");   // must be ignored now
+        System.setProperty("my.project.stage", "  prod ");
 
         assertThat(StageResolver.resolve()).contains("prod");
     }
 
     @Test
-    void stageFromSetAsSystemProperty() {
-        System.setProperty(PpiOptions.STAGE_FROM_PROPERTY, "my.project.stage");
-        System.setProperty("my.project.stage", "prod");
+    void nameIsTrimmed() {
+        PpiOptions.setStageFrom("  my.project.stage  ");
 
-        Optional<String> actual = StageResolver.resolve();
-
-        assertThat(actual).contains("prod");
+        assertThat(PpiOptions.getStageFrom()).isEqualTo("my.project.stage");
     }
 
     // ---------- set-once rules ----------
 
     @Test
-    @DisabledIfEnvironmentVariable(named = "MY_AWESOME_PROJECT", matches = ".*")
+    void blankNameIsRejected() {
+        assertThatThrownBy(() -> PpiOptions.setStageFrom("  "))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> PpiOptions.setStageFrom(null))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void sameStageFromTwiceIsAllowed() {
         PpiOptions.setStageFrom("my.project.stage");
         PpiOptions.setStageFrom("my.project.stage");
@@ -97,23 +107,21 @@ class StageResolverTest {
     }
 
     @Test
-    void stageFromCannotChangeAfterFreeze() {
+    void stageFromCannotBeSetAfterFreeze() {
         PpiOptions.freeze();
 
         assertThatThrownBy(() -> PpiOptions.setStageFrom("my.project.stage"))
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("before the first ignite()");
     }
 
     @Test
-    @EnabledIfEnvironmentVariables({
-            @EnabledIfEnvironmentVariable(named = "MY_AWESOME_PROJECT", matches = ".*"),
-    })
-    void testEnvFromConfiguration() {
-        System.clearProperty(PpiOptions.STAGE_FROM_PROPERTY);
-        System.clearProperty("my.awesome.project");
-        System.out.println("debug, stageFrom: " + PpiOptions.getStageFrom());
-        String actual = StageResolver.resolveOrNull();
-        String expected = "dev";
-        assertThat(actual).isEqualTo(expected);
+    void sameStageFromAfterFreezeIsAllowed() {
+        PpiOptions.setStageFrom("my.project.stage");
+        PpiOptions.freeze();
+
+        PpiOptions.setStageFrom("my.project.stage");        // same value: no error
+
+        assertThat(PpiOptions.getStageFrom()).isEqualTo("my.project.stage");
     }
 }
