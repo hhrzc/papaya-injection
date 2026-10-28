@@ -4,17 +4,14 @@ package com.hhrzc.papaya.invocation;
 import com.hhrzc.papaya.ppi.annotations.Sensor;
 import com.hhrzc.papaya.ppi.annotations.Param;
 import com.hhrzc.papaya.ppi.annotations.Telemetry;
-import com.hhrzc.papaya.ppi.exceptions.ParamAnnotationMissingException;
-import com.hhrzc.papaya.ppi.exceptions.SelectorMismatchKeyException;
-import com.hhrzc.papaya.ppi.exceptions.SensorAnnotationMissedException;
-import com.hhrzc.papaya.ppi.exceptions.TelemetryFileNotDeterminedException;
-import com.hhrzc.papaya.ppi.exceptions.UnexpectedParameterException;
+import com.hhrzc.papaya.ppi.exceptions.*;
+import com.hhrzc.papaya.ppi.model.DataSupplier;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
@@ -24,11 +21,12 @@ import java.util.stream.Collectors;
  * It processes the {@link Sensor} annotations on the methods and retrieves the corresponding selectors from the .telemetry file.
  * It also handles the parameter injection for dynamic selectors using the {@link Param} annotation.
  * L - the object that represents the locator (Playwright's Locator, Selenium's WebElement, etc.)
- * S - the supplier type that the invocation handler will return (e.g., LocatorSupplier, WebElementSupplier, etc.)
+ * S - the supplier type that the invocation handler will return (e.g., LocatorSupplier, WebElementSupplier,
+ * WebElementsSupplier, etc.). Only DataSupplier is required, so one handler can return several supplier types.
  * P - the postfix locator type that can be optionally passed to the method (e.g., PostfixLocator for Playwright,
  * PostfixElement for Selenium etc.)
  */
-public abstract class AbstractInvocationHandler<L, S extends Function<?, L>, P extends UnaryOperator<L>> implements InvocationHandler {
+public abstract class AbstractInvocationHandler<L, S extends DataSupplier, P extends UnaryOperator<L>> implements InvocationHandler {
 
     private final Properties selectors;
 
@@ -79,7 +77,7 @@ public abstract class AbstractInvocationHandler<L, S extends Function<?, L>, P e
         return createSupplier(method, finalSelector, postfix, args);
     }
 
-    private P extractSinglePostfix(Method method, Object ... args) {
+    private P extractSinglePostfix(Method method, Object[] args) {
 
         if (args == null) {
             return null;
@@ -90,8 +88,7 @@ public abstract class AbstractInvocationHandler<L, S extends Function<?, L>, P e
                 .map(arg -> (P) arg)
                 .collect(Collectors.toSet());
 
-        final int maxPostfixCount = 1;
-        if (postfixLocators.size() > maxPostfixCount) {
+        if (postfixLocators.size() > 1) {
             throw new IllegalArgumentException("PPU Violation: Only one PostfixLocator is allowed in the method " + method.getName());
         }
 
@@ -103,7 +100,7 @@ public abstract class AbstractInvocationHandler<L, S extends Function<?, L>, P e
     }
 
     private String resolveSelector(Method method, Sensor sensor) {
-        String selector;
+        String selector = null;
         String key = sensor.value();
 
         if (key.isEmpty()) {//return method name as key to look up selector in unit file
@@ -112,6 +109,10 @@ public abstract class AbstractInvocationHandler<L, S extends Function<?, L>, P e
             selector = key.substring(1);
         } else {//return the selector from the unit file using the key defined in the annotation
             selector = getProperty(key, method);
+        }
+
+        if (selector == null) {
+            throw new RuntimeException("PPU Telemetry Fault: Key [" + key + "] not found in unit file.");
         }
 
         return selector;
@@ -137,7 +138,7 @@ public abstract class AbstractInvocationHandler<L, S extends Function<?, L>, P e
 
         //verify if there are any unresolved parameters in the selector after processing
         if ((processedSelector.contains("{") && processedSelector.contains("}")) &&
-                processedSelector.indexOf('{') < processedSelector.indexOf('}')
+                processedSelector.indexOf("{") < processedSelector.indexOf("}")
         ) {
             throw new SelectorMismatchKeyException("Unresolved placeholders found", processedSelector);
         }

@@ -5,8 +5,10 @@ import com.hhrzc.papaya.ppi.annotations.Param;
 import com.hhrzc.papaya.ppi.exceptions.ParamAnnotationMissingException;
 import com.hhrzc.papaya.ppi.exceptions.SelectorMismatchKeyException;
 import com.hhrzc.papaya.ppi.model.BY;
+import com.hhrzc.papaya.ppi.model.DataSupplier;
 import com.hhrzc.papaya.ppi.model.PostfixWebElement;
 import com.hhrzc.papaya.ppi.model.WebElementSupplier;
+import com.hhrzc.papaya.ppi.model.WebElementsSupplier;
 import com.hhrzc.papaya.ppi.utils.ByExtractor;
 import com.hhrzc.papaya.ppi.utils.Utils;
 import org.openqa.selenium.By;
@@ -15,9 +17,12 @@ import org.openqa.selenium.WebElement;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.List;
 import java.util.Properties;
 
-public class SeleniumHandler extends AbstractInvocationHandler<WebElement, WebElementSupplier, PostfixWebElement> {
+public class SeleniumHandler extends AbstractInvocationHandler<WebElement, DataSupplier, PostfixWebElement> {
+
+    private static final BY DEFAULT_BY = BY.XPATH;
 
     public SeleniumHandler(Properties selectors) {
         super(selectors);
@@ -40,14 +45,26 @@ public class SeleniumHandler extends AbstractInvocationHandler<WebElement, WebEl
     }
 
     @Override
-    protected WebElementSupplier createSupplier(Method method, String finalSelector, PostfixWebElement postfix, Object... args) {
+    protected DataSupplier createSupplier(Method method, String finalSelector, PostfixWebElement postfix, Object... args) {
         BY processedBy = defineBy(method, finalSelector, args);
+
+        if (method.getReturnType() == WebElementsSupplier.class) {
+            if (postfix != null) {
+                throw new UnsupportedOperationException(
+                        "PPI Fault: postfix is not supported for WebElementsSupplier (method " + method.getName() + ")");
+            }
+            return elementsSupplier(method, finalSelector, processedBy);
+        }
+        return elementSupplier(method, finalSelector, postfix, processedBy);
+    }
+
+    /** One element: driver.findElement(...) */
+    private WebElementSupplier elementSupplier(Method method, String finalSelector,
+                                               PostfixWebElement postfix, BY processedBy) {
         return new WebElementSupplier() {
             @Override
             public WebElement apply(WebDriver driver) {
-                if (driver == null) {
-                    throw new IllegalArgumentException("PPU Engine Fault: WebDriver cannot be null when calling " + method.getName());
-                }
+                checkDriver(driver, method);
                 WebElement element = driver.findElement(processedBy.by().apply(finalSelector));
                 return postfix == null ? element : postfix.apply(element);
             }
@@ -60,21 +77,52 @@ public class SeleniumHandler extends AbstractInvocationHandler<WebElement, WebEl
             @Override
             public String getSelectorValue() {
                 String postfixByValue = ByExtractor.extractByFromPostfix(postfix);
-                return processedBy.prefixValue() + ": " + finalSelector + (postfixByValue == null ? "" :
-                        ", " + postfixByValue);
+                return processedBy.prefixValue() + ": " + finalSelector
+                        + (postfixByValue == null ? "" : ", " + postfixByValue);
             }
 
             @Override
             public String toString() {
-                return "WebElementSupplier{" +
-                        "variableName='" + getVariableName() + '\'' +
-                        ", selectorValue='" + getSelectorValue() + '\'' +
-                        '}';
+                return "WebElementSupplier{variableName='" + getVariableName()
+                        + "', selectorValue='" + getSelectorValue() + "'}";
             }
         };
     }
 
-    private BY defineBy(Method method, String finalSelector, Object ... args) {
+    /** All matching elements: driver.findElements(...), an empty list if none */
+    private WebElementsSupplier elementsSupplier(Method method, String finalSelector, BY processedBy) {
+        return new WebElementsSupplier() {
+            @Override
+            public List<WebElement> apply(WebDriver driver) {
+                checkDriver(driver, method);
+                return driver.findElements(processedBy.by().apply(finalSelector));
+            }
+
+            @Override
+            public String getVariableName() {
+                return Utils.getName(method);
+            }
+
+            @Override
+            public String getSelectorValue() {
+                return processedBy.prefixValue() + ": " + finalSelector;
+            }
+
+            @Override
+            public String toString() {
+                return "WebElementsSupplier{variableName='" + getVariableName()
+                        + "', selectorValue='" + getSelectorValue() + "'}";
+            }
+        };
+    }
+
+    private static void checkDriver(WebDriver driver, Method method) {
+        if (driver == null) {
+            throw new IllegalArgumentException("PPU Engine Fault: WebDriver cannot be null when calling " + method.getName());
+        }
+    }
+
+    private BY defineBy(Method method, String finalSelector, Object[] args) {
         if (args != null && args.length > 0) {
             if (method.getParameters()[0].getType() == BY.class) {
                 return (BY) args[0];
@@ -107,7 +155,7 @@ public class SeleniumHandler extends AbstractInvocationHandler<WebElement, WebEl
         }
 
         if ((processedSelector.contains("{") && processedSelector.contains("}")) &&
-                processedSelector.indexOf('{') < processedSelector.indexOf('}')
+                processedSelector.indexOf("{") < processedSelector.indexOf("}")
         ) {
             throw new SelectorMismatchKeyException("Unresolved placeholders found", processedSelector);
         }

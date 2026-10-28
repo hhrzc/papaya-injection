@@ -231,7 +231,7 @@ root-project/
 ```java
 @Telemetry("pages/home-page.telemetry")
 public interface HomePage {
-    @Sensor("products")
+    @Sensor("product")
     WebElementSupplier productsMenu();
 }
 ```

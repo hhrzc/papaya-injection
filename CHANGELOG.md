@@ -1,3 +1,9 @@
+## 0.4.0
+
+### Added
+- Selenium: `WebElementsSupplier` for lists: a method returning it uses `driver.findElements(...)`
+  and gives all matching elements (an empty list if none).
+
 ## 0.3.1
 
 ### Added
