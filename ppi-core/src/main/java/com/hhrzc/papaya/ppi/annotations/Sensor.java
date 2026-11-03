@@ -26,6 +26,7 @@ import java.lang.annotation.Target;
  *
  * For the empty string case, if the method name is "clickSubmitButton", then the selector will be looked up in the unit file using the key "clickSubmitButton=path-to-btn".
  */
+@Locating
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Sensor {

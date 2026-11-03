@@ -34,13 +34,13 @@ You only need to depend on the module(s) that match your stack — e.g. just `pp
 Add whichever module(s) you need. For example, Playwright with Spring:
 
 ```groovy
-implementation("io.github.hhrzc:ppi-playwright-spring:0.3.1")
+implementation("io.github.hhrzc:ppi-playwright-spring:0.5.0")
 ```
 
 Or plain Selenium, no Spring:
 
 ```groovy
-implementation("io.github.hhrzc:ppi-selenium-java:0.3.1")
+implementation("io.github.hhrzc:ppi-selenium-java:0.5.0")
 ```
 
 Maven:
@@ -49,7 +49,7 @@ Maven:
 <dependency>
     <groupId>io.github.hhrzc</groupId>
     <artifactId>ppi-playwright-spring</artifactId>
-    <version>0.3.1</version>
+    <version>0.5.0</version>
 </dependency>
 ```
 
@@ -191,7 +191,7 @@ public class LoginPageAction{
 1) add the dependency:
 
 ```groovy
-implementation("io.github.hhrzc:ppi-selenium-java:0.3.1")
+implementation("io.github.hhrzc:ppi-selenium-java:0.5.0")
 ```
 
 Maven:
@@ -200,7 +200,7 @@ Maven:
 <dependency>
     <groupId>io.github.hhrzc</groupId>
     <artifactId>ppi-selenium-java</artifactId>
-    <version>0.3.1</version>
+    <version>0.5.0</version>
 </dependency>
 ```
 
@@ -286,6 +286,8 @@ LocatorSupplier supplier = loginPage.buttonByNameWithPostfix("baz", locator -> l
 supplier.getVariableName();   // "buttonByNameWithPostfix"
 supplier.getSelectorValue();  // "button[class*='baz'] -> locator("//xpath")"
 ```
+
+See [Playwright locating annotations](docs/playwright-annotations-0.5.0.md) for all options and rules.
 
 Selenium:
 

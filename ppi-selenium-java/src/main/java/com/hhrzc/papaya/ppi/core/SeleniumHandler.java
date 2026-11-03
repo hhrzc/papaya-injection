@@ -1,7 +1,9 @@
 package com.hhrzc.papaya.ppi.core;
 
 import com.hhrzc.papaya.invocation.AbstractInvocationHandler;
+import com.hhrzc.papaya.invocation.SelectorSource;
 import com.hhrzc.papaya.ppi.annotations.Param;
+import com.hhrzc.papaya.ppi.annotations.Sensor;
 import com.hhrzc.papaya.ppi.exceptions.ParamAnnotationMissingException;
 import com.hhrzc.papaya.ppi.exceptions.SelectorMismatchKeyException;
 import com.hhrzc.papaya.ppi.model.BY;
@@ -15,10 +17,12 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 public class SeleniumHandler extends AbstractInvocationHandler<WebElement, DataSupplier, PostfixWebElement> {
 
@@ -45,7 +49,8 @@ public class SeleniumHandler extends AbstractInvocationHandler<WebElement, DataS
     }
 
     @Override
-    protected DataSupplier createSupplier(Method method, String finalSelector, PostfixWebElement postfix, Object... args) {
+    protected DataSupplier createSupplier(Method method, SelectorSource source, String finalSelector,
+                                          PostfixWebElement postfix, Object... args) {
         BY processedBy = defineBy(method, finalSelector, args);
 
         if (method.getReturnType() == WebElementsSupplier.class) {
@@ -53,13 +58,13 @@ public class SeleniumHandler extends AbstractInvocationHandler<WebElement, DataS
                 throw new UnsupportedOperationException(
                         "PPI Fault: postfix is not supported for WebElementsSupplier (method " + method.getName() + ")");
             }
-            return elementsSupplier(method, finalSelector, processedBy);
+            return elementsSupplier(method, source, finalSelector, processedBy);
         }
-        return elementSupplier(method, finalSelector, postfix, processedBy);
+        return elementSupplier(method, source, finalSelector, postfix, processedBy);
     }
 
     /** One element: driver.findElement(...) */
-    private WebElementSupplier elementSupplier(Method method, String finalSelector,
+    private WebElementSupplier elementSupplier(Method method, SelectorSource source, String finalSelector,
                                                PostfixWebElement postfix, BY processedBy) {
         return new WebElementSupplier() {
             @Override
@@ -71,7 +76,7 @@ public class SeleniumHandler extends AbstractInvocationHandler<WebElement, DataS
 
             @Override
             public String getVariableName() {
-                return Utils.getName(method);
+                return displayName(method, source);
             }
 
             @Override
@@ -90,7 +95,7 @@ public class SeleniumHandler extends AbstractInvocationHandler<WebElement, DataS
     }
 
     /** All matching elements: driver.findElements(...), an empty list if none */
-    private WebElementsSupplier elementsSupplier(Method method, String finalSelector, BY processedBy) {
+    private WebElementsSupplier elementsSupplier(Method method, SelectorSource source, String finalSelector, BY processedBy) {
         return new WebElementsSupplier() {
             @Override
             public List<WebElement> apply(WebDriver driver) {
@@ -100,7 +105,7 @@ public class SeleniumHandler extends AbstractInvocationHandler<WebElement, DataS
 
             @Override
             public String getVariableName() {
-                return Utils.getName(method);
+                return displayName(method, source);
             }
 
             @Override
@@ -129,6 +134,11 @@ public class SeleniumHandler extends AbstractInvocationHandler<WebElement, DataS
             }
         }
         return Utils.isXPath(finalSelector) ? BY.XPATH : BY.CSS;
+    }
+
+    @Override
+    protected Set<Class<? extends Annotation>> supportedAnnotations() {
+        return Set.of(Sensor.class);
     }
 
     @Override

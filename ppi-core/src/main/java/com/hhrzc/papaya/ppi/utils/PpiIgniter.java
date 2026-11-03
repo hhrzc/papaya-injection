@@ -62,17 +62,11 @@ public class PpiIgniter {
                     "PPU Engine Fault: cannot create " + handlerType.getName(), e);
         }
 
-        T t = (T) Proxy.newProxyInstance(
+        return (T) Proxy.newProxyInstance(
                 interfaceType.getClassLoader(),
                 new Class<?>[]{interfaceType},
                 handler
         );
-
-        // From now on the stage variable name can't change:
-        // all interfaces of this run read the stage from the same variable.
-        PpiOptions.freeze();
-
-        return t;
     }
 
     private static <T> void verifyInterface(Class<T> interfaceType) {

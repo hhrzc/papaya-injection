@@ -1,3 +1,22 @@
+## 0.5.0
+
+### Added
+- Playwright locating annotations, as an alternative to `@Sensor` with string selectors:
+  `@ByText`, `@ByLabel`, `@ByPlaceholder`, `@ByAltText`, `@ByTitle`, `@ByTestId`, `@ByRole`
+  (with `level`, `checked`, `disabled`, `expanded`, `pressed`, `selected`, `includeHidden`) and `@ByAttribute`.
+  Each one calls the matching Playwright `getBy...` method; options are annotation attributes with
+  Playwright's defaults; `regex = true` uses a `Pattern`; `description` sets the name for logs.
+- `value` works like in `@Sensor`: `""` = method name as key, `"$..."` = literal, otherwise a key in the
+  .telemetry file; `{param}` placeholders and stages work as before. For `@ByRole`, `""` means "no name".
+- Readable `getSelectorValue()` for the new annotations, e.g. `getByRole(BUTTON, name="Sign in", level=1)`.
+
+### Changed
+- A method with more than one locating annotation (for example `@Sensor` and `@ByText`) now fails with a clear error.
+- Selenium pages report `@By...` annotations as "not supported by SeleniumHandler" instead of a missing `@Sensor`.
+
+### Fixed
+- `PpiOptions` is no longer frozen by Spring-created pages (only the plain-Java `ignite()` freezes it).
+
 ## 0.4.0
 
 ### Added
