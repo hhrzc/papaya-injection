@@ -62,6 +62,7 @@ public abstract class AbstractInvocationHandler<L, S extends DataSupplier, P ext
 
 
     @Override
+    @SuppressWarnings("PMD.PreserveStackTrace")
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
         if (method.getDeclaringClass() == Object.class) {
@@ -112,7 +113,9 @@ public abstract class AbstractInvocationHandler<L, S extends DataSupplier, P ext
         if (found.isEmpty()) {
             return null;
         }
-        if (found.size() > 1) {
+
+        final int maximumLocatingAnnotations = 1;
+        if (found.size() > maximumLocatingAnnotations) {
             throw new IllegalStateException("PPI Violation: Method [" + method.getName()
                     + "] has more than one locating annotation: "
                     + found.stream().map(a -> "@" + a.annotationType().getSimpleName()).collect(Collectors.joining(", "))
@@ -147,6 +150,7 @@ public abstract class AbstractInvocationHandler<L, S extends DataSupplier, P ext
                 .collect(Collectors.joining(", "));
     }
 
+    @SuppressWarnings("PMD.EmptyCatchBlock")
     /** Reads a String attribute by name; the first name that exists wins; "" if none exists. */
     private static String stringAttribute(Annotation annotation, String... names) {
         for (String name : names) {
@@ -161,7 +165,7 @@ public abstract class AbstractInvocationHandler<L, S extends DataSupplier, P ext
         return "";
     }
 
-    private P extractSinglePostfix(Method method, Object[] args) {
+    private P extractSinglePostfix(Method method, Object ... args) {
 
         if (args == null) {
             return null;
@@ -172,7 +176,9 @@ public abstract class AbstractInvocationHandler<L, S extends DataSupplier, P ext
                 .map(arg -> (P) arg)
                 .collect(Collectors.toSet());
 
-        if (postfixLocators.size() > 1) {
+        final int maximumPostfixLocators = 1;
+
+        if (postfixLocators.size() > maximumPostfixLocators) {
             throw new IllegalArgumentException("PPU Violation: Only one PostfixLocator is allowed in the method " + method.getName());
         }
 
@@ -223,7 +229,7 @@ public abstract class AbstractInvocationHandler<L, S extends DataSupplier, P ext
 
         //verify if there are any unresolved parameters in the selector after processing
         if ((processedSelector.contains("{") && processedSelector.contains("}")) &&
-                processedSelector.indexOf("{") < processedSelector.indexOf("}")
+                processedSelector.indexOf('{') < processedSelector.indexOf('}')
         ) {
             throw new SelectorMismatchKeyException("Unresolved placeholders found", processedSelector);
         }

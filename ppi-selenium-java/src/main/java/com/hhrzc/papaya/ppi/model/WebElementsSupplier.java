@@ -19,5 +19,6 @@ import java.util.function.Function;
  *
  * Postfixes are not supported for lists.
  */
+@FunctionalInterface
 public interface WebElementsSupplier extends Function<WebDriver, List<WebElement>>, DataSupplier {
 }

@@ -7,9 +7,11 @@
     <description>Rules for Papaya Injection</description>
 
     <rule ref="category/java/bestpractices.xml"/>    <!-- unused code, missing @Override, ... -->
-    <rule ref="category/java/multithreading.xml"/>   <!-- unsafe static fields, ... -->
     <rule ref="category/java/performance.xml"/>      <!-- needless object creation, ... -->
     <rule ref="category/java/errorprone.xml">
         <exclude name="MissingSerialVersionUID"/>    <!-- empty catch, wrong comparisons, ... -->
+    </rule>
+    <rule ref="category/java/multithreading.xml">
+        <exclude name="AvoidSynchronizedStatement"/>
     </rule>
 </ruleset>

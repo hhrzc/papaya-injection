@@ -26,8 +26,6 @@ import java.util.Set;
 
 public class SeleniumHandler extends AbstractInvocationHandler<WebElement, DataSupplier, PostfixWebElement> {
 
-    private static final BY DEFAULT_BY = BY.XPATH;
-
     public SeleniumHandler(Properties selectors) {
         super(selectors);
     }
@@ -127,7 +125,7 @@ public class SeleniumHandler extends AbstractInvocationHandler<WebElement, DataS
         }
     }
 
-    private BY defineBy(Method method, String finalSelector, Object[] args) {
+    private BY defineBy(Method method, String finalSelector, Object ... args) {
         if (args != null && args.length > 0) {
             if (method.getParameters()[0].getType() == BY.class) {
                 return (BY) args[0];
@@ -165,7 +163,7 @@ public class SeleniumHandler extends AbstractInvocationHandler<WebElement, DataS
         }
 
         if ((processedSelector.contains("{") && processedSelector.contains("}")) &&
-                processedSelector.indexOf("{") < processedSelector.indexOf("}")
+                processedSelector.indexOf('{') < processedSelector.indexOf("}")
         ) {
             throw new SelectorMismatchKeyException("Unresolved placeholders found", processedSelector);
         }
